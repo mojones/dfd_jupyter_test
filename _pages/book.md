@@ -37,9 +37,11 @@ But the packages themselves can be **hard to get to grips with**. It's difficult
 
 You may have already encountered this. If you look at the matplotlib website, it's clear that it's a powerful charting tool - but looking at the tutorial can be daunting. The same goes for pandas: it can carry out almost any type of data manipulation, but that same power makes it hard to get to grips with.
 
-<br/><br/><br/>
+<br/><br/>
+
 ---
-<br/><br/><br/>
+
+<br/><br/>
 
 Happily, learning to use Python effectively for data exploration is **a superpower that you can learn**. With a basic knowledge of Python, pandas (for data manipulation) and seaborn (for data visualization) you'll be able to understand complex datasets quickly and mine them for insight.
 
