@@ -13,15 +13,19 @@ permalink: /book/
 
 #### With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers.
 
+<br/>
+<br/>
+<br/>
+
 We're currently in a **golden age of data**. It's never been easier to assemble large datasets to probe questions in almost any field.  
 
 But these large datasets come with their own problems:
 
-    How to clean and validate data?
+- How to clean and validate data?
 
-    How to combine datasets from multiple sources?
+- How to combine datasets from multiple sources?
 
-    And how to look for patterns in large, complex datasets and display your findings?
+- And how to look for patterns in large, complex datasets and display your findings?
 
 **These are the questions that we all ask when we start working with these rich data sources.**
 
