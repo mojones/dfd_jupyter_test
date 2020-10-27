@@ -40,3 +40,10 @@ You'll be able to make beautiful, informative charts for posters, papers and pre
 And you'll be able to quickly make sense of datasets from other projects - millions of rows of data will no longer be a scary prospect!
 
 In this book, I have drawn on years of teaching experience to give you the tools you need to answer your data exploration questions. Starting with the basics, you'll learn how to use Python, pandas, seaborn and matplotlib effectively using real world examples throughout.
+
+<img align="right" src="../images/inside_pages.png" alt="drawing" width="400"/>
+<br/>
+<br/>
+<br/>
+
+#### **Just the best bits** of the best data exploration packages
