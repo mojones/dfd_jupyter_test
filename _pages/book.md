@@ -51,11 +51,11 @@ And you'll be able to quickly make sense of datasets from other projects - milli
 
 In this book, I have drawn on years of teaching experience to give you the tools you need to answer your data exploration questions. Starting with the basics, you'll learn how to use Python, pandas, seaborn and matplotlib effectively using real world examples throughout.
 
-<img align="right" src="../images/inside_pages.png" alt="drawing" width="400"/>
+<img align="right" src="../images/inside_pages.png" alt="drawing" width="500"/>
 <br/>
 <br/>
 <br/>
 
 ### **Just the best bits** <br/>of the best data exploration packages
-
+<div style="clear: both;"></div>
 testtesttest
