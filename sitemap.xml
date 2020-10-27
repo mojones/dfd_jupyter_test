@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>https://mojones.github.io/dfd_jupyter_test/markdown/2020/01/14/test-markdown-post.html</loc>
-<lastmod>2020-01-14T00:00:00-06:00</lastmod>
-</url>
-<url>
 <loc>https://mojones.github.io/dfd_jupyter_test/pandas/clustering/2020/10/26/making-a-pairwise-distance-matrix-in-pandas.html</loc>
 <lastmod>2020-10-26T00:00:00-05:00</lastmod>
 </url>
@@ -18,6 +14,10 @@
 </url>
 <url>
 <loc>https://mojones.github.io/dfd_jupyter_test/pandas/seaborn/matplotlib/visualization/2020/10/26/setting-figure-size-matplotlib-seaborn.html</loc>
+<lastmod>2020-10-26T00:00:00-05:00</lastmod>
+</url>
+<url>
+<loc>https://mojones.github.io/dfd_jupyter_test/pandas/strings/2020/10/26/working-with-pandas-string-methods.html</loc>
 <lastmod>2020-10-26T00:00:00-05:00</lastmod>
 </url>
 <url>
