@@ -8,11 +8,16 @@ permalink: /book/
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
 
 ## Time to get to grips with your data
 
 #### With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers.
 
+<br/>
+<br/>
+<br/>
 <br/>
 <br/>
 <br/>
