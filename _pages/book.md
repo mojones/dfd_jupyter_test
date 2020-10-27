@@ -9,6 +9,6 @@ permalink: /book/
 <br/>
 <br/>
 
-Time to get to grips with your data
+## Time to get to grips with your data
 
-With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers.
+#### With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers.
