@@ -15,12 +15,9 @@ permalink: /book/
 
 #### With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers.
 
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
+
+<br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/>
 
 We're currently in a **golden age of data**. It's never been easier to assemble large datasets to probe questions in almost any field.  
 
@@ -40,11 +37,13 @@ But the packages themselves can be **hard to get to grips with**. It's difficult
 
 You may have already encountered this. If you look at the matplotlib website, it's clear that it's a powerful charting tool - but looking at the tutorial can be daunting. The same goes for pandas: it can carry out almost any type of data manipulation, but that same power makes it hard to get to grips with.
 
+<br/><br/><br/>
 ---
+<br/><br/><br/>
 
-Happily, learning to use Python effectively for data exploration is a superpower that you can learn. With a basic knowledge of Python, pandas (for data manipulation) and seaborn (for data visualization) you'll be able to understand complex datasets quickly and mine them for insight.
+Happily, learning to use Python effectively for data exploration is **a superpower that you can learn**. With a basic knowledge of Python, pandas (for data manipulation) and seaborn (for data visualization) you'll be able to understand complex datasets quickly and mine them for insight.
 
-You'll be able to make beautiful, informative charts for posters, papers and presentations, and rapidly update them to reflect new data or test new hypotheses.
+You'll be able to make **beautiful, informative charts** for posters, papers and presentations, and rapidly update them to reflect new data or test new hypotheses.
 
 And you'll be able to quickly make sense of datasets from other projects - millions of rows of data will no longer be a scary prospect!
 
@@ -55,4 +54,4 @@ In this book, I have drawn on years of teaching experience to give you the tools
 <br/>
 <br/>
 
-#### **Just the best bits** of the best data exploration packages
+#### **Just the best bits** <br/>of the best data exploration packages
