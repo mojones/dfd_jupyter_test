@@ -72,7 +72,7 @@
 
   
       ,"page2": {
-          "title": "Drawing from Data book",
+          "title": "",
           "content": ". Time to get to grips with your data . With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers. .",
           "url": "https://mojones.github.io/dfd_jupyter_test/book/",
           "relUrl": "/book/",
