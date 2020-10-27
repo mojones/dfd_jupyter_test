@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Drawing from Data book
+title:  
 permalink: /book/
 ---
 
