@@ -256,7 +256,7 @@ Your files will be delivered by email, so you can start reading (and watching) r
 ## **The bookshelf package**
 <img align="left" src="../images/books_package.png" alt="drawing" width="700"/>
 
-#### Everything for complete beginners: the *Drawing from Data* book, the *Python for complete beginners* book, and all the videos
+#### The *Drawing from Data* book plus the *Python for complete beginners* book, and all the videos
 
 
 <br/>
@@ -277,8 +277,9 @@ Your files will be delivered by email, so you can start reading right away. And 
 
 ## **Just the book**
 <img align="left" src="../images/drawing_from_data.png" alt="drawing" width="300"/>
+<div style="clear: both;"></div>
 
-#### Everything for complete beginners: the *Drawing from Data* book, the *Python for complete beginners* book, and all the videos
+#### Just the *Drawing from Data* book
 
 
 <br/>
