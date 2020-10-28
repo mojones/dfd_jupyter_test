@@ -29,11 +29,11 @@ But the packages themselves can be **hard to get to grips with**. It's difficult
 
 You may have already encountered this. If you look at the matplotlib website, it's clear that it's a powerful charting tool - but looking at the tutorial can be daunting. The same goes for pandas: it can carry out almost any type of data manipulation, but that same power makes it hard to get to grips with.
 
-<br/><br/>
+<br/>
 
 ---
 
-<br/><br/>
+<br/>
 
 Happily, learning to use Python effectively for data exploration is **a superpower that you can learn**. With a basic knowledge of Python, pandas (for data manipulation) and seaborn (for data visualization) you'll be able to understand complex datasets quickly and mine them for insight.
 
@@ -46,12 +46,12 @@ In this book, I have drawn on years of teaching experience to give you the tools
 <br/>
 <br/>
 
-<img align="left" src="../images/inside_pages.png" alt="drawing" width="300"/>
-<br/><br/>
-
-
+<img align="right" src="../images/inside_pages.png" alt="drawing" width="300"/>
+<br/>
 ### **Just the best bits** <br/>of the best data exploration packages
 <div style="clear: both;"></div>
+
 <br/>
 <br/>
+
 Rather than overwhelm you with information, the book concentrates on the most useful parts of the relevant libraries. Full color illustrations show hundreds of examples covering dozens of different chart types, with complete code samples that you can tweak and use for your own work.
