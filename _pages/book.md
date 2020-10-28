@@ -55,3 +55,36 @@ In this book, I have drawn on years of teaching experience to give you the tools
 <br/>
 
 Rather than overwhelm you with information, the book concentrates on the most useful parts of the relevant libraries. Full color illustrations show hundreds of examples covering dozens of different chart types, with complete code samples that you can tweak and use for your own work.
+
+The book is designed to help you get over the most common obstacles that we encounter with real world data.
+
+You'll learn what to do if:
+
+    your input files have errors, or missing data.
+
+    your input files are too big to fit in memory
+
+    you need to combine data from multiple sources
+
+    you have to visualize datasets with thousands of rows or millions of columns
+
+    you need to make complex filters for your data
+
+    your data are in the wrong format for the analysis you want to do
+
+
+Once you understand the basics of pandas, seaborn and matplotlib, the chapters on visualization will show you how to make sophisticated charts with minimal code and how to best use color to make clear charts.
+
+
+<br/>
+<br/>
+
+<img align="right" src="../images/chart_types.png" alt="drawing" width="300"/>
+<br/>
+### **All the chart types** you'll need
+<div style="clear: both;"></div>
+
+<br/>
+<br/>
+
+The book covers the most basic charts that we use every day - histograms, scatter plots and boxplots - and more exotic charts like clustermaps and violin plots - all with full working code and real world examples. 
