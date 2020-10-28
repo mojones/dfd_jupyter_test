@@ -123,4 +123,29 @@ In it you'll learn:
 - how to spot artefacts caused by human error
 - how to deal with structured data inside columns
 - how to quickly spot correlations between columns
-- how to view trneds over Time
+- how to view trends over time
+
+
+<br/>
+
+---
+
+<br/>
+
+<br/>
+
+<img align="right" src="../images/video2.png" alt="drawing" width="400"/>
+
+### **Video 2: Car accident reports**
+
+#### In this video we explore reports of 3.5 million US car accidents
+<div style="clear: both;"></div>
+
+<br/>
+In it you'll learn:
+
+- how to reduce memory usage of large files
+- what to look out for when dealing with automated data collection
+- how to use heatmaps for visualizing temporal data
+- how to use GeoPandas to deal with geographic data
+- how to visualize geographical data at multiple levels of detail
