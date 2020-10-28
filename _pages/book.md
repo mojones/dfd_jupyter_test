@@ -289,3 +289,44 @@ These two books come as searchable, DRM-free PDF files that you can keep forever
 Your files will be delivered by email, so you can start reading right away. And you’ll get free access to any updates to the book (for example, when code changes to reflect changes in the libraries).
 
 <br/>
+
+---
+
+<br/>
+Frequently asked questions:
+
+**What’s covered in the book?**
+
+Rather than trying to give an exhaustive tour pandas, seaborn, matplotlib and numpy (each of which could fill several books), the book concentrates on the most useful parts of each library. Here’s a complete list of chapters and topics:
+
+- getting data into pandas: series and dataframes, read_csv, dtypes/info/describe/head/len, missing data, giving column names
+- working with series: getting a single column, descriptive statistics, value_counts, broadcasting operations, numpy vectorized ufuncs, string methods, selecting multiple columns, setting an index, dropna,
+- filtering and selecting: boolean masks, basic filtering, isin, selecting with strings, multiple conditions, filter/select/aggregate pattern
+- pandas examples: turning series into list, iterating over unique values
+- intro to seaborn and plotting distributions: imports, distplot, setting title, distplot in a loop, relplot, hue and size for numerical values, adding a new column and plotting
+- special types of scatter plots: alpha/size/sample/hexbin/contour for large numbers, lmplot for regressions, pairwise plots
+- conditioning charts on categories: hue with category, size for category, style for category, small multiples with row/column, multiples with relplot
+- categorical axes wtih seaborn: about different types of categories, strip plots, swarm plots, multiples, box plots, problems with order, boxplots hide distribution details, violin plots, boxen plots, bar plots, point plots, line charts, count plots
+- styling figures with seaborn: three levels (seaborn high. seaborn low, matplotlib), aspect/height, labels, styles and contexts, passing keywords,
+- working with colours in seaborn: setting single colours, setting palettes, sequential data, don't use rainbows, custom sequential, categorical palettes, redundant information, diverging palettes, when to use colour, matching between charts, colour plus style, displaying redundant catfor book layoutegories, adding metadata, highlighting categories, using colours consistently, don't reuse
+- working with groups in pandas: types of categories, uniqueness, groupby, grouping on multiple columns, aggregating, turning into dataframes, filtering, transforming, iterating over groups, sorting to get group names
+- binning data: simple binary with filter and replace, increased options for visualisation, using pd.cut, range, uneven bins, exponential bins, using size for ordered categories, turning categories into ordered ones.
+- Long vs wide form and indices: why long data is best for visualization, using unstack to make a summary, using melt to get data into tidy form, setting an index, index performance, multi indexing, index slicing and loc
+- Matrix charts: displaying summary tables, setting scales, annotation, missing data, lots of categories, diverging palettes, binning, custom annotation, clustering walkthrough, row/col cluster, normalizing, color annotation, bubble grids, plotting context
+- Tricky data files in pandas: awkward input files, skiprows, setting names, using columns, footers, comments, thousands/decimals, boolean values, method chaining, assign and pipe, concat, adding a column by assigning a series, merging, inner/outer, dealing with large datasets, skipping columns, categories, precision
+- Using facet grids directly: making a facetgrid, using map for simple things, using map_dataframe with custom functions, reusing custom functions, using hue for single charts, small multiple heat maps
+- Unexpected behaviours: missing groups in groupby, fixing it with categories, breaking it with multiple grouping, workarounds, unsorted categories after unstacking, min_count in sum, odd scales in seaborn
+- High performance pandas: looping vs. vectorization, looping vs. apply, apply on dataframes, caching, replace and memoization, sampling large datasets, categories, indices, unique indices
+- Further reading: datetimes, alternative syntax, plotting directly from pandas, jupyter widgets, bokeh, machine learning, statistics
+
+**Do I need to know Python in order to follow the book?**
+
+Yes - you don’t need to be a Python expert, but you do need to know the basics: the book isn’t intended for complete beginners. If you’ve never used Python before, you’ll need to learn the core of the language first. You can do this by buying one of the bookshelf packages (which includes **Python for complete beginners**, which *is* intended, as the name suggests, for complete beginners), or following various introductory Python tutorials online.
+
+**Who are you?**
+
+Hi, I’m Martin - formerly a bioinformatics researcher and lecturer at the University of Edinburgh; now a freelance Python writer and trainer. I've been using and teaching Python, with an emphasis on data exploration, for about ten years now.
+
+**Can I buy a group license for my team/office/research group/startup?**
+
+Sure, drop me an email martin@drawingfromdata.com and we’ll work something out.
