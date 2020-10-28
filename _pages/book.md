@@ -108,16 +108,14 @@ In each of the four detailed videos, we'll take a single real world dataset and 
 <br/>
 
 <br/>
-<br/>
 
-<img align="right" src="../images/video1.png" alt="drawing" width="300"/>
+<img align="right" src="../images/video1.png" alt="drawing" width="400"/>
 <br/>
 ### **Video 1: 5000 Movie dataset**
 
 #### In this video we look at a dataset of 5000 movies with genres, dates and budgets
 <div style="clear: both;"></div>
 
-<br/>
 <br/>
 In it you'll learn:
 
