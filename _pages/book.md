@@ -253,7 +253,7 @@ Your files will be delivered by email, so you can start reading (and watching) r
 <br/>
 
 <div align="center">
-## **The bookshelf package**
+<h2>The bookshelf package</h2>
 </div>
 
 <img align="left" src="../images/books_package.png" alt="drawing" width="700"/>
