@@ -173,3 +173,28 @@ In it you'll learn:
 - how to look for categorical patterns across time
 - how to use color thematically
 - how to visualize heirarchical categories
+
+
+<br/>
+
+---
+
+<br/>
+
+<br/>
+
+<img align="left" src="../images/video4.png" alt="drawing" width="400"/>
+
+### **Video 4: Software developer survey**
+
+#### In this video we take a look at the results of a career survey of 100,000 developers
+<div style="clear: both;"></div>
+
+<br/>
+In it you'll learn:
+
+- how to deal effectively with survey data
+- how to rapidly understand the structure of a new dataset
+- how to visualize multiple overlapping categories
+- how to visualize and interpret rank data
+- how to optimize small multiple charts for readability
