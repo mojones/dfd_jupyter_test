@@ -246,6 +246,8 @@ You’ll also get the dataset walkthrough videos as high definition files that y
 
 Your files will be delivered by email, so you can start reading (and watching) right away. And you’ll get free access to any updates to the books (for example, when code changes to reflect changes in the libraries) and videos (for example, when new videos are added).
 
+<script src="https://gumroad.com/js/gumroad.js"></script>
+<a class="gumroad-button" href="https://gum.co/synpX" target="_blank">Buy the complete package now for $169</a>
 <br/>
 
 <br/>
