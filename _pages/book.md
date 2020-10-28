@@ -44,7 +44,7 @@ And you'll be able to quickly make sense of datasets from other projects - milli
 
 In this book, I have drawn on years of teaching experience to give you the tools you need to answer your data exploration questions. Starting with the basics, you'll learn how to use Python, pandas, seaborn and matplotlib effectively using real world examples throughout.
 
-<img align="right" src="../images/inside_pages.png" alt="drawing" width="500"/>
+<img align="right" src="../images/inside_pages.png" alt="drawing" width="300"/>
 <br/>
 <br/>
 <br/>
