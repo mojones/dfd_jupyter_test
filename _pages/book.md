@@ -210,7 +210,7 @@ Just like in the book, all the video files come with working code in Jupyter not
 
 <br/>
 
-If you work with data of any size, getting to grips with data exploration in Python is one of the biggest boosts you can make to your work and your career.
+If you work with data of any size, **getting to grips with data exploration in Python is one of the biggest boosts you can make to your work and your career.
 
 Free your data from Excel! Transform your messy spreadsheets into clean, tidy tables! Understand your data better!
 
@@ -226,12 +226,12 @@ You can pay securely with a credit card or with Paypal.
 
 <br/>
 
-<img align="left" src="../images/complete_package.png" alt="drawing" width="400"/>
 
 ### **The complete package: bookshelf plus videos**
+<img align="left" src="../images/complete_package.png" alt="drawing" width="700"/>
 
 #### Everything for complete beginners: the *Drawing from Data* book, the *Python for complete beginners* book, and all the videos
-<div style="clear: both;"></div>
+
 
 <br/>
 This is the complete package, intended for those who’ve never used Python before, or who want a refresher before diving in to the data exploration material.
@@ -240,7 +240,7 @@ It includes my first book *Python for complete beginners*, which will take you f
 
 These two books come as searchable, DRM-free PDF files that you can keep forever and read on any device, along with exercise and example files to practice on.
 
-You’ll also get the dataset walkthrough videos as high definition files that you can download and watch on any device. The videos come with interactive Jupyter notebook files that you can run, edit, and reuse for your own datasets. 
+You’ll also get the dataset walkthrough videos as high definition files that you can download and watch on any device. The videos come with interactive Jupyter notebook files that you can run, edit, and reuse for your own datasets.
 
 Your files will be delivered by email, so you can start reading (and watching) right away. And you’ll get free access to any updates to the books (for example, when code changes to reflect changes in the libraries) and videos (for example, when new videos are added).
 
