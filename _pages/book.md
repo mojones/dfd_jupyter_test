@@ -3,7 +3,6 @@ layout: page
 title:  
 permalink: /book/
 ---
-<div id="holder">
 <img align="left" src="../images/drawing_from_data.png" alt="drawing" width="400"/>
 <br/><br/><br/><br/>
 ## Time to get to grips with your data
@@ -53,4 +52,3 @@ In this book, I have drawn on years of teaching experience to give you the tools
 <div style="clear: both;"></div>
 
 Rather than overwhelm you with information, the book concentrates on the most useful parts of the relevant libraries. Full color illustrations show hundreds of examples covering dozens of different chart types, with complete code samples that you can tweak and use for your own work.
-</div>
