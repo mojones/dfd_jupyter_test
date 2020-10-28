@@ -226,11 +226,13 @@ You can pay securely with a credit card or with Paypal.
 
 <br/>
 
+<div align="center">
+<h2><b>The complete package: bookshelf plus videos</b></h2>
+</div>
+#### Everything for complete beginners: the *Drawing from Data* book, the *Python for complete beginners* book, and all the videos
 
-## **The complete package: bookshelf plus videos**
 <img align="left" src="../images/complete_package.png" alt="drawing" width="700"/>
 
-#### Everything for complete beginners: the *Drawing from Data* book, the *Python for complete beginners* book, and all the videos
 
 
 <br/>
