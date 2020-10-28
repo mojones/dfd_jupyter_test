@@ -56,21 +56,21 @@ In this book, I have drawn on years of teaching experience to give you the tools
 
 Rather than overwhelm you with information, the book concentrates on the most useful parts of the relevant libraries. Full color illustrations show hundreds of examples covering dozens of different chart types, with complete code samples that you can tweak and use for your own work.
 
-The book is designed to help you get over the most common obstacles that we encounter with real world data.
+**The book is designed to help you get over the most common obstacles that we encounter with real world data.**
 
 You'll learn what to do if:
 
-    your input files have errors, or missing data.
+- your input files have errors, or missing data.
 
-    your input files are too big to fit in memory
+- your input files are too big to fit in memory
 
-    you need to combine data from multiple sources
+- you need to combine data from multiple sources
 
-    you have to visualize datasets with thousands of rows or millions of columns
+- you have to visualize datasets with thousands of rows or millions of columns
 
-    you need to make complex filters for your data
+- you need to make complex filters for your data
 
-    your data are in the wrong format for the analysis you want to do
+- your data are in the wrong format for the analysis you want to do
 
 
 Once you understand the basics of pandas, seaborn and matplotlib, the chapters on visualization will show you how to make sophisticated charts with minimal code and how to best use color to make clear charts.
@@ -87,4 +87,42 @@ Once you understand the basics of pandas, seaborn and matplotlib, the chapters o
 <br/>
 <br/>
 
-The book covers the most basic charts that we use every day - histograms, scatter plots and boxplots - and more exotic charts like clustermaps and violin plots - all with full working code and real world examples. 
+The book covers the most basic charts that we use every day - histograms, scatter plots and boxplots - and more exotic charts like clustermaps and violin plots - all with full working code and real world examples.
+
+<br/>
+
+---
+
+<br/>
+
+For getting started with data exploration in Python, the step-by-step approach offered by the book beats everything else. But the real power of Python's data processing stack becomes apparent when you combine the individual tools in a single project.
+
+**That's where the videos come in.**
+
+In each of the four detailed videos, we'll take a single real world dataset and walk through all the steps involved in analyzing it, starting with publicly available data files and ending with our final figures. The videos give us a chance to explore different **types of data**, demonstrate **tips and techniques** that don't fit in the book, and use visualization to answer **interesting questions** on wide-ranging topics.
+
+<br/>
+
+---
+
+<br/>
+
+<br/>
+<br/>
+
+<img align="right" src="../images/video1.png" alt="drawing" width="300"/>
+<br/>
+### **Video 1: 5000 Movie dataset**
+
+#### In this video we look at a dataset of 5000 movies with genres, dates and budgets
+<div style="clear: both;"></div>
+
+<br/>
+<br/>
+In it you'll learn:
+
+- how to clean crowd-sourced data
+- how to spot artefacts caused by human error
+- how to deal with structured data inside columns
+- how to quickly spot correlations between columns
+- how to view trneds over Time
