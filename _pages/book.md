@@ -149,3 +149,27 @@ In it you'll learn:
 - how to use heatmaps for visualizing temporal data
 - how to use GeoPandas to deal with geographic data
 - how to visualize geographical data at multiple levels of detail
+
+<br/>
+
+---
+
+<br/>
+
+<br/>
+
+<img align="right" src="../images/video3.png" alt="drawing" width="400"/>
+
+### **Video 3: Lego set components**
+
+#### In this video we explore Lego sets - bricks, colors and metadata
+<div style="clear: both;"></div>
+
+<br/>
+In it you'll learn:
+
+- how to combine information that's spread across multiple files
+- how to deal with complex many-to-many relationships
+- how to look for categorical patterns across time
+- how to use color thematically
+- how to visualize heirarchical categories
