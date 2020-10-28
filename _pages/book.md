@@ -134,7 +134,7 @@ In it you'll learn:
 
 <br/>
 
-<img align="right" src="../images/video2.png" alt="drawing" width="400"/>
+<img align="left" src="../images/video2.png" alt="drawing" width="400"/>
 
 ### **Video 2: Car accident reports**
 
