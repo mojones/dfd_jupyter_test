@@ -5,19 +5,12 @@ permalink: /book/
 ---
 
 <img align="left" src="../images/drawing_from_data.png" alt="drawing" width="400"/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
 
 ## Time to get to grips with your data
 
 #### With Python, pandas and seaborn in your toolbox, you too can develop data exploration superpowers.
+<div style="clear: both;"></div>
 
-
-<br/><br/><br/><br/><br/><br/>
-<br/><br/><br/><br/><br/><br/>
 
 We're currently in a **golden age of data**. It's never been easier to assemble large datasets to probe questions in almost any field.  
 
@@ -58,4 +51,5 @@ In this book, I have drawn on years of teaching experience to give you the tools
 
 ### **Just the best bits** <br/>of the best data exploration packages
 <div style="clear: both;"></div>
-testtesttest
+
+Rather than overwhelm you with information, the book concentrates on the most useful parts of the relevant libraries. Full color illustrations show hundreds of examples covering dozens of different chart types, with complete code samples that you can tweak and use for your own work.
