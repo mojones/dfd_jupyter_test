@@ -257,10 +257,10 @@ Your files will be delivered by email, so you can start reading (and watching) r
 <div align="center">
 <h2><b>The bookshelf package</b></h2>
 </div>
-
+#### The *Drawing from Data* book plus the *Python for complete beginners* book, and all the videos
 <img align="left" src="../images/books_package.png" alt="drawing" width="700"/>
 
-#### The *Drawing from Data* book plus the *Python for complete beginners* book, and all the videos
+
 
 
 <br/>
@@ -278,12 +278,14 @@ Your files will be delivered by email, so you can start reading right away. And 
 
 <br/>
 
-
-## **Just the book**
+<div align="center">
+<h2><b>Just the book</b></h2>
+</div>
+#### Just the *Drawing from Data* book
 <img align="left" src="../images/drawing_from_data.png" alt="drawing" width="300"/>
 <div style="clear: both;"></div>
 
-#### Just the *Drawing from Data* book
+
 
 
 <br/>
