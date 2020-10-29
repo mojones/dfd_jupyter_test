@@ -277,7 +277,7 @@ Your files will be delivered by email, so you can start reading right away. And 
 
 <br/>
 <div align="center">
-<h4><a class="buy_button" href="https://gum.co/vuCsf" target="_blank">Buy the complete package now for $169</a></h4>
+<h4><a class="buy_button" href="https://gum.co/vuCsf" target="_blank">Buy the bookshelf package now for $79</a></h4>
 </div>
 <br/>
 
@@ -302,7 +302,7 @@ These two books come as searchable, DRM-free PDF files that you can keep forever
 Your files will be delivered by email, so you can start reading right away. And you’ll get free access to any updates to the book (for example, when code changes to reflect changes in the libraries).
 <br/>
 <div align="center">
-<h4><a class="buy_button" href="https://gum.co/nZmdP" target="_blank">Buy the complete package now for $169</a></h4>
+<h4><a class="buy_button" href="https://gum.co/nZmdP" target="_blank">Buy the book now for $39</a></h4>
 </div>
 <br/>
 
