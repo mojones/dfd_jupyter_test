@@ -248,7 +248,7 @@ You’ll also get the dataset walkthrough videos as high definition files that y
 Your files will be delivered by email, so you can start reading (and watching) right away. And you’ll get free access to any updates to the books (for example, when code changes to reflect changes in the libraries) and videos (for example, when new videos are added).
 
 <div align="center">
-<a href="https://gum.co/fnQsp" target="_blank">Buy the complete package now for $169</a>
+<a class="buy_button" href="https://gum.co/fnQsp" target="_blank">Buy the complete package now for $169</a>
 </div>
 
 <br/>
