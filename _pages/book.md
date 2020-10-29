@@ -246,8 +246,11 @@ You’ll also get the dataset walkthrough videos as high definition files that y
 
 Your files will be delivered by email, so you can start reading (and watching) right away. And you’ll get free access to any updates to the books (for example, when code changes to reflect changes in the libraries) and videos (for example, when new videos are added).
 
+<div align="center">
 <script src="https://gumroad.com/js/gumroad.js"></script>
 <a class="gumroad-button" href="https://gum.co/fnQsp" target="_blank">Buy the complete package now for $169</a>
+</div>
+
 <br/>
 
 <br/>
@@ -261,11 +264,10 @@ Your files will be delivered by email, so you can start reading (and watching) r
 </div>
 #### The *Drawing from Data* book plus the *Python for complete beginners* book, and all the videos
 <img align="left" src="../images/books_package.png" alt="drawing" width="400"/>
+<div style="clear: both;"></div>
 
 
 
-
-<br/>
 Don't like videos? This package includes *Python for complete beginners* along with the *Drawing from Data* book.
 
 These two books come as searchable, DRM-free PDF files that you can keep forever and read on any device, along with exercise and example files to practice on.
