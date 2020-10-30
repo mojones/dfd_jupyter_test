@@ -84,6 +84,22 @@
   
 
   
+      ,"page4": {
+          "title": "Newsletter",
+          "content": "Get the Drawing from Data newsletter . Sign up below to get an email with links to useful Python data science articles here and elsewhere. No spam ever, and an email every few weeks. . Get Python data analysis links and articles in your inbox . . . Email address Sign up",
+          "url": "https://drawingfromdata.com/newsletter/",
+          "relUrl": "/newsletter/",
+          "date": ""
+      }
+      
+  
+
+  
+  
+
+  
+
+  
   
 
   
@@ -92,18 +108,13 @@
   
 
   
-
-  
   
 
   
   
 
   
-  
-
-  
-      ,"page11": {
+      ,"page12": {
           "title": "",
           "content": "Sitemap: {{ “sitemap.xml” | absolute_url }} | .",
           "url": "https://drawingfromdata.com/robots.txt",
