@@ -20,3 +20,5 @@ layout: notebook
         {{ super()  }}
 </div>
 {%- endblock body %}
+<script async defer src="https://san.drawingfromdata.com/latest.js"></script>
+<noscript><img src="https://san.drawingfromdata.com/noscript.gif" alt=""/></noscript>
