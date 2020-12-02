@@ -1,0 +1,3614 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Does reducing numerical precision affect real world datasets? | Drawing from Data</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Does reducing numerical precision affect real world datasets?" />
+<meta name="author" content="Martin" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Reducing numerical precision is a way to save memory in pandas, but does it make a difference to the conclusions that we might draw from real world datasets?" />
+<meta property="og:description" content="Reducing numerical precision is a way to save memory in pandas, but does it make a difference to the conclusions that we might draw from real world datasets?" />
+<link rel="canonical" href="https://drawingfromdata.com/pandas/numpy/kaggle/2020/12/01/Article.html" />
+<meta property="og:url" content="https://drawingfromdata.com/pandas/numpy/kaggle/2020/12/01/Article.html" />
+<meta property="og:site_name" content="Drawing from Data" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-01T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://drawingfromdata.com/pandas/numpy/kaggle/2020/12/01/Article.html","@type":"BlogPosting","headline":"Does reducing numerical precision affect real world datasets?","dateModified":"2020-12-01T00:00:00-06:00","datePublished":"2020-12-01T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://drawingfromdata.com/pandas/numpy/kaggle/2020/12/01/Article.html"},"author":{"@type":"Person","name":"Martin"},"description":"Reducing numerical precision is a way to save memory in pandas, but does it make a difference to the conclusions that we might draw from real world datasets?","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://drawingfromdata.com/feed.xml" title="Drawing from Data" /><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+<script async defer src="https://san.drawingfromdata.com/latest.js"></script>
+  <noscript><img src="https://san.drawingfromdata.com/noscript.gif" alt=""/></noscript>
+  
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Drawing from Data</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About Me</a><a class="page-link" href="/newsletter/">Newsletter</a><a class="page-link" href="/search/">Search</a><a class="page-link" href="/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Does reducing numerical precision affect real world datasets?</h1><p class="page-description">Reducing numerical precision is a way to save memory in pandas, but does it make a difference to the conclusions that we might draw from real world datasets?</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-12-01T00:00:00-06:00" itemprop="datePublished">
+        Dec 1, 2020
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Martin</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      25 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/categories/#pandas">pandas</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#numpy">numpy</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#kaggle">kaggle</a>
+        
+      
+      </p>
+    
+
+    
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h3"><a href="#Executive-summary">Executive summary </a></li>
+<li class="toc-entry toc-h3"><a href="#Slightly-longer-summary">Slightly longer summary </a></li>
+<li class="toc-entry toc-h2"><a href="#Introduction">Introduction </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Part-one:-changing-data-types-and-measuring-differences">Part one: changing data types and measuring differences </a></li>
+<li class="toc-entry toc-h3"><a href="#Proportional-differences">Proportional differences </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Comparing-correlations">Comparing correlations </a></li>
+<li class="toc-entry toc-h2"><a href="#Part-two:-let's-try-it-on-a-larger-scale">Part two: let&#39;s try it on a larger scale </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Downloading-the-data">Downloading the data </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Processing-the-downloaded-files">Processing the downloaded files </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Comparing-summary-statistics">Comparing summary statistics </a></li>
+<li class="toc-entry toc-h3"><a href="#Comparing-linear-regressions">Comparing linear regressions </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Part-three:-looking-at-the-results">Part three: looking at the results </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Looking-at-changes-in-summary-statistics">Looking at changes in summary statistics </a></li>
+<li class="toc-entry toc-h3"><a href="#Looking-at-linear-regressions">Looking at linear regressions </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Conclusion">Conclusion </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/Article.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Executive-summary">
+<a class="anchor" href="#Executive-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Executive summary<a class="anchor-link" href="#Executive-summary"> </a>
+</h3>
+<p>Switching from 64 bit to 32 bit precision for floating point data in pandas saves memory and has virtually no effect on the data, as long as the values aren't greater than around 10<sup>300</sup></p>
+<h3 id="Slightly-longer-summary">
+<a class="anchor" href="#Slightly-longer-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Slightly longer summary<a class="anchor-link" href="#Slightly-longer-summary"> </a>
+</h3>
+<ul>
+<li>I wrote code to download ~1,000 real world datasets from kaggle and look at summary statistics and linear regressions of floating point columns in both 64 and 32 bit precision</li>
+<li>The final analysis involved ~1,000 datasets, ~8,000 data files, ~500,000,000 individual floating point values and ~500,000 linear regressions. </li>
+<li>Changing to 32 bit precision introduced a mean proportional error of around 10<sup>-8</sup> in the summary statistics, with the worst affected columns having a proportional error of around 10<sup>-6</sup>
+</li>
+<li>For linear regressions, the mean proportional change in slope and intercept was on the order of 10<sup>-6</sup>
+</li>
+<li>A small number of outliers with near-zero slope (representing uninteresting relationships) had larger proportional errors</li>
+<li>In ~400,000 valid linear regressions I was unable to find any relationships whose significance at the 5% level was changed by moving from 64 to 32 bit precision</li>
+<li>For real world datasets, switching from 64 to 32 bit floating point precision is overwhelmingly unlikely to alter our conclusions about the data, and is an easy way to reduce memory usage. </li>
+</ul>
+<h2 id="Introduction">
+<a class="anchor" href="#Introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction<a class="anchor-link" href="#Introduction"> </a>
+</h2>
+<p>As you've probably noticed, this is a longish article, so grab a cup of coffee if you're planning to read it all. If you're already familiar with floating point precision and error in pandas you can probably skip part one. Most of the methods stuff is in part two, so if you just want to see the results, skip to part three. Also, just to head off the obvious criticism, I think that most of the conclusions of this article could have been arrived at by pure reasoning, without looking at any data at all. But hopefully some folks will, like me, be more satisfied by empirical data :-)</p>
+<p>Obviously, I think that pandas is wonderful :-) But it has a number of quirks, among them a reputation for being memory hungry. There are no shortage of articles online discussing how to fit large dataframes in memory, and there are a number of well established techniques (there's a whole chapter on the subject in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>, and also an extended discussion in the car accidents dataset video).</p>
+<p>One technique that always gets mentioned is storing numbers in a reduced precision data type. This is usually proposed as one of the last things to try after other options have been exhausted. I think there are a couple of reasons for this. One is that messing about with data types is a bit harder to explain than simple things like ignoring unneeded columns. Another is that deliberately throwing away information - which is what reducing precision will do - feels very uncomfortable from a data analysis point of view!</p>
+<p>One thing that I've rarely seen in such discussions is a measurement of how much of an effect reduced precision will have in real life datasets. This is surprising, since pandas makes it very easy to measure. So let's go ahead and try it...</p>
+<h3 id="Part-one:-changing-data-types-and-measuring-differences">
+<a class="anchor" href="#Part-one:-changing-data-types-and-measuring-differences" aria-hidden="true"><span class="octicon octicon-link"></span></a>Part one: changing data types and measuring differences<a class="anchor-link" href="#Part-one:-changing-data-types-and-measuring-differences"> </a>
+</h3>
+<p>Before we dive in, a quick reminder of the pandas tools we'll use. All of the methods etc. are described in detail in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>, so we'll limit ourselves here to an overview.</p>
+<p>As an example, let's load the planets dataset:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">planets</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/planets.csv'</span><span class="p">)</span>
+<span class="n">planets</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>method</th>
+      <th>number</th>
+      <th>orbital_period</th>
+      <th>mass</th>
+      <th>distance</th>
+      <th>year</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Radial Velocity</td>
+      <td>1</td>
+      <td>269.300000</td>
+      <td>7.10</td>
+      <td>77.40</td>
+      <td>2006</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Radial Velocity</td>
+      <td>1</td>
+      <td>874.774000</td>
+      <td>2.21</td>
+      <td>56.95</td>
+      <td>2008</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Radial Velocity</td>
+      <td>1</td>
+      <td>763.000000</td>
+      <td>2.60</td>
+      <td>19.84</td>
+      <td>2011</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Radial Velocity</td>
+      <td>1</td>
+      <td>326.030000</td>
+      <td>19.40</td>
+      <td>110.62</td>
+      <td>2007</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Radial Velocity</td>
+      <td>1</td>
+      <td>516.220000</td>
+      <td>10.50</td>
+      <td>119.47</td>
+      <td>2009</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>1030</th>
+      <td>Transit</td>
+      <td>1</td>
+      <td>3.941507</td>
+      <td>NaN</td>
+      <td>172.00</td>
+      <td>2006</td>
+    </tr>
+    <tr>
+      <th>1031</th>
+      <td>Transit</td>
+      <td>1</td>
+      <td>2.615864</td>
+      <td>NaN</td>
+      <td>148.00</td>
+      <td>2007</td>
+    </tr>
+    <tr>
+      <th>1032</th>
+      <td>Transit</td>
+      <td>1</td>
+      <td>3.191524</td>
+      <td>NaN</td>
+      <td>174.00</td>
+      <td>2007</td>
+    </tr>
+    <tr>
+      <th>1033</th>
+      <td>Transit</td>
+      <td>1</td>
+      <td>4.125083</td>
+      <td>NaN</td>
+      <td>293.00</td>
+      <td>2008</td>
+    </tr>
+    <tr>
+      <th>1034</th>
+      <td>Transit</td>
+      <td>1</td>
+      <td>4.187757</td>
+      <td>NaN</td>
+      <td>260.00</td>
+      <td>2008</td>
+    </tr>
+  </tbody>
+</table>
+<p>1035 rows × 6 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>which stores information about planets that have been discovered around other stars. We are interested in the orbital period column, which we'll store in a variable for convenience:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">op</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s1">'orbital_period'</span><span class="p">]</span>
+<span class="n">op</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0       269.300000
+1       874.774000
+2       763.000000
+3       326.030000
+4       516.220000
+           ...    
+1030      3.941507
+1031      2.615864
+1032      3.191524
+1033      4.125083
+1034      4.187757
+Name: orbital_period, Length: 1035, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>which tells us how long each planet takes to revolve around its host star. Because it's comprised of floating point numbers, it get the <code>float64</code> data type by default. To change the data type, we can just use the <code>as_type</code> method. Let's try <code>float32</code>:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0       269.299988
+1       874.773987
+2       763.000000
+3       326.029999
+4       516.219971
+           ...    
+1030      3.941507
+1031      2.615864
+1032      3.191524
+1033      4.125083
+1034      4.187757
+Name: orbital_period, Length: 1035, dtype: float32</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>All we need to know about these two data types is that, as the names suggest, a single <code>float64</code> value uses 64 bits of memory, whereas a <code>float32</code> uses, you guessed it, 32 bits. So it comes as no great surprise that the memory usage of the <code>float32</code> version is very close to half that of the <code>float64</code> version:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">op</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(),</span> <span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(8408, 4268)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As well as a difference in memory usage, we can see from the output above that there are slight differences in the values themselves. This is perhaps easiest to see if we put the two series next to each other:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">op</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>orbital_period</th>
+      <th>orbital_period</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>269.300000</td>
+      <td>269.299988</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>874.774000</td>
+      <td>874.773987</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>763.000000</td>
+      <td>763.000000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>326.030000</td>
+      <td>326.029999</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>516.220000</td>
+      <td>516.219971</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>1030</th>
+      <td>3.941507</td>
+      <td>3.941507</td>
+    </tr>
+    <tr>
+      <th>1031</th>
+      <td>2.615864</td>
+      <td>2.615864</td>
+    </tr>
+    <tr>
+      <th>1032</th>
+      <td>3.191524</td>
+      <td>3.191524</td>
+    </tr>
+    <tr>
+      <th>1033</th>
+      <td>4.125083</td>
+      <td>4.125083</td>
+    </tr>
+    <tr>
+      <th>1034</th>
+      <td>4.187757</td>
+      <td>4.187757</td>
+    </tr>
+  </tbody>
+</table>
+<p>1035 rows × 2 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To figure out how different the two series are, pandas makes it easy to just take the difference:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span> <span class="o">-</span> <span class="n">op</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0      -1.220703e-05
+1      -1.318359e-05
+2       0.000000e+00
+3      -1.220703e-06
+4      -2.929688e-05
+            ...     
+1030    1.264038e-08
+1031    3.846741e-08
+1032   -1.096405e-07
+1033    1.696655e-07
+1034    1.522827e-08
+Name: orbital_period, Length: 1035, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It's probably more useful to view these as absolute difference, i.e. to ignore the sign:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span> <span class="o">-</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0       1.220703e-05
+1       1.318359e-05
+2       0.000000e+00
+3       1.220703e-06
+4       2.929688e-05
+            ...     
+1030    1.264038e-08
+1031    3.846741e-08
+1032    1.096405e-07
+1033    1.696655e-07
+1034    1.522827e-08
+Name: orbital_period, Length: 1035, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we can look at a summary:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span> <span class="o">-</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>count    9.920000e+02
+mean     3.887688e-06
+std      1.556957e-05
+min      0.000000e+00
+25%      1.572113e-08
+50%      1.246643e-07
+75%      1.220703e-06
+max      1.953125e-04
+Name: orbital_period, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The general picture here is that the change from <code>float64</code> to <code>float32</code> has made very little difference to the values. On average, it introduces an absolute error of around 4x10<sup>-6</sup>, or 0.000004, and the single worst-case value has an absolute error of about 0.0002. These errors are very small relative to the range of the original values:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">op</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>count       992.000000
+mean       2002.917596
+std       26014.728304
+min           0.090706
+25%           5.442540
+50%          39.979500
+75%         526.005000
+max      730000.000000
+Name: orbital_period, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Proportional-differences">
+<a class="anchor" href="#Proportional-differences" aria-hidden="true"><span class="octicon octicon-link"></span></a>Proportional differences<a class="anchor-link" href="#Proportional-differences"> </a>
+</h3>
+<p>If we wanted to compare the errors meaningfully across multiple different datasets, it might be useful to look at the error as a proportion of the original values:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">((</span><span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span> <span class="o">-</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>count    9.920000e+02
+mean     1.733438e-08
+std      1.494138e-08
+min      0.000000e+00
+25%      2.540837e-09
+50%      1.536689e-08
+75%      2.830340e-08
+max      5.878977e-08
+Name: orbital_period, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This calculation is a bit more involved, but easier to interpret. It is telling us that the switch from <code>float64</code> to <code>float32</code> changed the values on average by about 10<sup>-8</sup> - a truly miniscule chanage.</p>
+<p>Another way to look at the difference is to compare the summaries of the two series. For any given aggregation we can figure out the proportional change by taking the absolute difference and dividing by the original:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="n">op</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>5.7728789459559594e-08</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So changing the series to <code>float32</code> alters the mean by a factor of around 10<sup>-8</sup>. We can do the same calculation with any other summary statistic - for instance, the standard deviation:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">-</span> <span class="n">op</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">())</span> <span class="o">/</span> <span class="n">op</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>8.132412130848449e-09</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Comparing-correlations">
+<a class="anchor" href="#Comparing-correlations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparing correlations<a class="anchor-link" href="#Comparing-correlations"> </a>
+</h2>
+<p>Another way to measure the effect of reduced precision is to see if it changes the correlation between floating point columns. In our planets dataset we have two other floating point columns: the mass and the distance. Using pandas' built in <code>corr</code> method we can calculate the pairwise pearson correlation of all the floating point columns:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">planets</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">'float64'</span><span class="p">)</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>orbital_period</th>
+      <th>mass</th>
+      <th>distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>orbital_period</th>
+      <td>1.000000</td>
+      <td>0.173725</td>
+      <td>-0.034365</td>
+    </tr>
+    <tr>
+      <th>mass</th>
+      <td>0.173725</td>
+      <td>1.000000</td>
+      <td>0.274082</td>
+    </tr>
+    <tr>
+      <th>distance</th>
+      <td>-0.034365</td>
+      <td>0.274082</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Then do the same with a <code>float32</code> version and take the difference:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">'float64'</span><span class="p">)</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span>
+    <span class="o">-</span> <span class="n">planets</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s1">'float64'</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">corr</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>orbital_period</th>
+      <th>mass</th>
+      <th>distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>orbital_period</th>
+      <td>0.000000e+00</td>
+      <td>-6.383500e-10</td>
+      <td>7.736160e-11</td>
+    </tr>
+    <tr>
+      <th>mass</th>
+      <td>-6.383500e-10</td>
+      <td>0.000000e+00</td>
+      <td>1.046595e-09</td>
+    </tr>
+    <tr>
+      <th>distance</th>
+      <td>7.736160e-11</td>
+      <td>1.046595e-09</td>
+      <td>0.000000e+00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As we can see, the differences are tiny, and would definitely not alter our conclusions about the relationships in the dataset. For a more sophisticated look at correlations, we could bring in a linear regression:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">linregress</span>
+
+<span class="n">linregress</span><span class="p">(</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'orbital_period'</span><span class="p">],</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'mass'</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>LinregressResult(slope=0.00045766570228103964, intercept=2.1268128078962634, rvalue=0.1849061860050771, pvalue=3.298187969140348e-05, stderr=0.00010921992411493946)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>and again take the difference between the 64 and 32 bit versions:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">l_64</span> <span class="o">=</span> <span class="n">linregress</span><span class="p">(</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'orbital_period'</span><span class="p">],</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'mass'</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">l_32</span> <span class="o">=</span> <span class="n">linregress</span><span class="p">(</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'orbital_period'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">),</span>
+    <span class="n">planets</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'mass'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'slope difference : </span><span class="si">{</span><span class="n">l_64</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">l_32</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'intercept difference : </span><span class="si">{</span><span class="n">l_64</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">l_32</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'R value difference : </span><span class="si">{</span><span class="n">l_64</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">l_32</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>slope difference : -1.6647770943907514e-12 
+intercept difference : 2.81312630967534e-08 
+R value difference : -1.7317597356125702e-10 
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Once again, the difference is incredibly minor. Given that the original values might be very small, a proprtional change might be easier to interpret:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'proportional slope difference : </span><span class="si">{</span><span class="p">(</span><span class="n">l_64</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">l_32</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">l_64</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'proportional intercept difference : </span><span class="si">{</span><span class="p">(</span><span class="n">l_64</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">l_32</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">l_64</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'proportional R value difference : </span><span class="si">{</span><span class="p">(</span><span class="n">l_64</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">l_32</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">l_64</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1"> '</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>proportional slope difference : -3.6375395536379053e-09 
+proportional intercept difference : 1.3226957723928434e-08 
+proportional R value difference : -9.365612763031196e-10 
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Part-two:-let's-try-it-on-a-larger-scale">
+<a class="anchor" href="#Part-two:-let's-try-it-on-a-larger-scale" aria-hidden="true"><span class="octicon octicon-link"></span></a>Part two: let's try it on a larger scale<a class="anchor-link" href="#Part-two:-let's-try-it-on-a-larger-scale"> </a>
+</h2>
+<p>Attentive readers will have noticed that all of the calculations above were done by Python code :-) That means that it should be possible to automate this process and try it across a large number of different datasets. For a convenient source of real world dataset we turn to <a href="http://kaggle.com">kaggle</a>.</p>
+<p>The collection of datasets hosted at Kaggle is perfect for our purposes. It contains real world data from a massive range of different fields and sources, mostly stored in files that will be easy to get in to pandas. It also has a convenient API with a Python client library, which will make it easy to download a large collection of different data files.</p>
+<h3 id="Downloading-the-data">
+<a class="anchor" href="#Downloading-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Downloading the data<a class="anchor-link" href="#Downloading-the-data"> </a>
+</h3>
+<p>To download our collection of datasets using the Kaggle API we have to go through a couple of steps. First we will connect to the API and authenticate:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">kaggle.api.kaggle_api_extended</span> <span class="kn">import</span> <span class="n">KaggleApi</span>
+<span class="n">api</span> <span class="o">=</span> <span class="n">KaggleApi</span><span class="p">()</span>
+<span class="n">api</span><span class="o">.</span><span class="n">authenticate</span><span class="p">()</span>
+</pre></div>
+<p>Next we can get a list of datasets by using the <code>dataset_list</code> method. We will search for CSV files, since they will be the easiest to load into pandas, and use pagination to get a large collection of dataset objects. Here I'm using the <code>tqdm</code> package for a progress bar, since this code takes a long time to run. I'm not sure if it's necessary, but I'm also putting in a 1-second delay between requests in an attempt to be a good internet citizen:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tqdm.notebook</span> <span class="kn">import</span> <span class="n">trange</span><span class="p">,</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="n">datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">api</span><span class="o">.</span><span class="n">dataset_list</span><span class="p">(</span><span class="n">file_type</span><span class="o">=</span><span class="s1">'csv'</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="n">page</span><span class="p">))</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+<p>Now we have a list of dataset objects, we can get on to the actual downloading. To keep things organized I'm using a separate folder for each dataset (which might end up containing multiple files). Once I've created the folder it's just a case of calling <code>dataset_download_files</code> with each dataset reference from the previous step and the new folder name as the destination. I'm also using <code>unzip=True</code> to make sure that we end up with extracted files. This will obviously take more disk space than leaving them compressed.</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">dat</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">all_datasets</span><span class="p">):</span>
+
+    <span class="n">folder_name</span> <span class="o">=</span> <span class="n">dat</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'/'</span><span class="p">,</span> <span class="s1">'-'</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_name</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+    <span class="n">api</span><span class="o">.</span><span class="n">dataset_download_files</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dat</span><span class="o">.</span><span class="n">ref</span><span class="p">),</span><span class="n">path</span><span class="o">=</span><span class="n">folder_name</span><span class="p">,</span> <span class="n">unzip</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Processing-the-downloaded-files">
+<a class="anchor" href="#Processing-the-downloaded-files" aria-hidden="true"><span class="octicon octicon-link"></span></a>Processing the downloaded files<a class="anchor-link" href="#Processing-the-downloaded-files"> </a>
+</h2>
+<p>Now that we've done the download step, we can get on to reading our data files and measuring the effect of reducing precision. Let's take a look at the function to take a single file and just give us the columns we're interested in:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_float_columns</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">'latin-1'</span><span class="p">)</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">([</span><span class="s1">'float64'</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'cannot read </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    
+    <span class="c1"># replace infinite values with missing data</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1"># get rid of columns that are only floats because they contain missing data</span>
+    <span class="c1"># i.e. they should actually be integers</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">==</span> <span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()):</span>
+            <span class="n">keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+    
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Some of the files will need special arguments to <code>read_csv</code> in order to open. Of course, since we have so many files, we can't go and manually figure out the correct arguments for every one. So to open the file we'll just call <code>read_csv</code> in a <code>try</code> block so that files requiring complex arguments won't crash our program. We are only interested in floating point columns, so we'll use <code>select_dtypes</code> to get them.</p>
+<p>There's a slight complication in selecting the floating point columns: due to the way that pandas handles missing data, integer columns that contain missing data will end up as <code>float64</code> by default. So there's a chunk of code to identify floating point columns that are really integers, and to drop them from the dataset.</p>
+<p>We can test out the function by running it on our planets dataset:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">get_float_columns</span><span class="p">(</span><span class="s1">'planets.csv'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>orbital_period</th>
+      <th>mass</th>
+      <th>distance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>269.300000</td>
+      <td>7.10</td>
+      <td>77.40</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>874.774000</td>
+      <td>2.21</td>
+      <td>56.95</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>763.000000</td>
+      <td>2.60</td>
+      <td>19.84</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>326.030000</td>
+      <td>19.40</td>
+      <td>110.62</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>516.220000</td>
+      <td>10.50</td>
+      <td>119.47</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>1030</th>
+      <td>3.941507</td>
+      <td>NaN</td>
+      <td>172.00</td>
+    </tr>
+    <tr>
+      <th>1031</th>
+      <td>2.615864</td>
+      <td>NaN</td>
+      <td>148.00</td>
+    </tr>
+    <tr>
+      <th>1032</th>
+      <td>3.191524</td>
+      <td>NaN</td>
+      <td>174.00</td>
+    </tr>
+    <tr>
+      <th>1033</th>
+      <td>4.125083</td>
+      <td>NaN</td>
+      <td>293.00</td>
+    </tr>
+    <tr>
+      <th>1034</th>
+      <td>4.187757</td>
+      <td>NaN</td>
+      <td>260.00</td>
+    </tr>
+  </tbody>
+</table>
+<p>1035 rows × 3 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As expected, we just get the floating point columns.</p>
+<h3 id="Comparing-summary-statistics">
+<a class="anchor" href="#Comparing-summary-statistics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparing summary statistics<a class="anchor-link" href="#Comparing-summary-statistics"> </a>
+</h3>
+<p>Now we can move on to the first question, calculating the summary statistics for each column in both 64 bit and 32 bit versions. Most of the work will be done by <code>describe</code>. We will add a <code>_64</code> and a <code>_32</code> suffix to the column names, then concatenate the two descriptions to give a wide summary table with one row per column in the original dataframe:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">summarize_columns</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="n">summary_64</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">summary_64</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="o">+</span> <span class="s1">'_64'</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">summary_64</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span> 
+    
+    <span class="n">summary_64_abs</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">summary_64_abs</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="o">+</span> <span class="s1">'_64_abs'</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">summary_64_abs</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span> 
+
+    <span class="n">summary_32</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">summary_32</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="o">+</span> <span class="s1">'_32'</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">summary_32</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span> 
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">summary_32</span><span class="p">,</span> <span class="n">summary_64</span><span class="p">,</span> <span class="n">summary_64_abs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">result</span>
+    
+<span class="n">planets</span> <span class="o">=</span> <span class="n">get_float_columns</span><span class="p">(</span><span class="s1">'planets.csv'</span><span class="p">)</span>
+<span class="n">summarize_columns</span><span class="p">(</span><span class="n">planets</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count_32</th>
+      <th>mean_32</th>
+      <th>std_32</th>
+      <th>min_32</th>
+      <th>25%_32</th>
+      <th>50%_32</th>
+      <th>75%_32</th>
+      <th>max_32</th>
+      <th>count_64</th>
+      <th>mean_64</th>
+      <th>...</th>
+      <th>75%_64</th>
+      <th>max_64</th>
+      <th>count_64_abs</th>
+      <th>mean_64_abs</th>
+      <th>std_64_abs</th>
+      <th>min_64_abs</th>
+      <th>25%_64_abs</th>
+      <th>50%_64_abs</th>
+      <th>75%_64_abs</th>
+      <th>max_64_abs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>orbital_period</th>
+      <td>992.0</td>
+      <td>2002.917480</td>
+      <td>26014.728516</td>
+      <td>0.090706</td>
+      <td>5.442540</td>
+      <td>39.9795</td>
+      <td>526.005005</td>
+      <td>730000.0</td>
+      <td>992.0</td>
+      <td>2002.917596</td>
+      <td>...</td>
+      <td>526.005</td>
+      <td>730000.0</td>
+      <td>992.0</td>
+      <td>2002.917596</td>
+      <td>26014.728304</td>
+      <td>0.090706</td>
+      <td>5.44254</td>
+      <td>39.9795</td>
+      <td>526.005</td>
+      <td>730000.0</td>
+    </tr>
+    <tr>
+      <th>mass</th>
+      <td>513.0</td>
+      <td>2.638161</td>
+      <td>3.818617</td>
+      <td>0.003600</td>
+      <td>0.229000</td>
+      <td>1.2600</td>
+      <td>3.040000</td>
+      <td>25.0</td>
+      <td>513.0</td>
+      <td>2.638161</td>
+      <td>...</td>
+      <td>3.040</td>
+      <td>25.0</td>
+      <td>513.0</td>
+      <td>2.638161</td>
+      <td>3.818617</td>
+      <td>0.003600</td>
+      <td>0.22900</td>
+      <td>1.2600</td>
+      <td>3.040</td>
+      <td>25.0</td>
+    </tr>
+    <tr>
+      <th>distance</th>
+      <td>808.0</td>
+      <td>264.069275</td>
+      <td>733.116455</td>
+      <td>1.350000</td>
+      <td>32.560001</td>
+      <td>55.2500</td>
+      <td>178.500000</td>
+      <td>8500.0</td>
+      <td>808.0</td>
+      <td>264.069282</td>
+      <td>...</td>
+      <td>178.500</td>
+      <td>8500.0</td>
+      <td>808.0</td>
+      <td>264.069282</td>
+      <td>733.116493</td>
+      <td>1.350000</td>
+      <td>32.56000</td>
+      <td>55.2500</td>
+      <td>178.500</td>
+      <td>8500.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>3 rows × 24 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>There's one slight complication compared to our original planet code. Think about the case where we have a column of mixed negative and positive values. We might end up with a situation where the mean is very close to zero, even though the values themselves are not. This will give us an inflated estimate of the precision error when we divide by the mean. By working with a mean of the absolute values we can avoid this. The same goes for the other summary statistics - median, min, max, etc.</p>
+<p>This dataframe is a bit awkward to read on a web page, since it's so wide. But the column structure makes it very easy to check, for example, the difference in the means, either in absolute terms:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_columns</span><span class="p">(</span><span class="n">planets</span><span class="p">)</span>
+<span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">'mean_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">summary</span><span class="p">[</span><span class="s1">'mean_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>orbital_period    1.156260e-04
+mass              1.207711e-07
+distance          7.275874e-06
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Or as a proportion of the original:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_columns</span><span class="p">(</span><span class="n">planets</span><span class="p">)</span>
+<span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">'mean_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">summary</span><span class="p">[</span><span class="s1">'mean_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">summary</span><span class="p">[</span><span class="s1">'mean_64_abs'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>orbital_period    5.772879e-08
+mass              4.577852e-08
+distance          2.755290e-08
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Comparing-linear-regressions">
+<a class="anchor" href="#Comparing-linear-regressions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparing linear regressions<a class="anchor-link" href="#Comparing-linear-regressions"> </a>
+</h3>
+<p>Next we need a function that will take our dataframe of floating point columns and calculate pairwise linear regressions for both 32 and 64 bit versions. Here's what it looks like:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="k">def</span> <span class="nf">summarize_regressions</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+    
+    <span class="c1"># if fewer than two columns or fewer than ten rows, skip</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    
+    <span class="n">df_32</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+    
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+            
+            
+        <span class="n">regression_64</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>
+        <span class="n">regression_32</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">df_32</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">df_32</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>
+
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">y</span><span class="p">,</span>
+                <span class="n">regression_64</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="c1"># slope</span>
+                <span class="n">regression_32</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">regression_64</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="c1"># intercept</span>
+                <span class="n">regression_32</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">regression_64</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="c1"># R value</span>
+                <span class="n">regression_32</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">regression_64</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="c1"># P value</span>
+                <span class="n">regression_32</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">,</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'x'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> 
+               <span class="s1">'slope_64'</span><span class="p">,</span> <span class="s1">'slope_32'</span><span class="p">,</span> 
+               <span class="s1">'intercept_64'</span><span class="p">,</span> <span class="s1">'intercept_32'</span><span class="p">,</span> 
+               <span class="s1">'rvalue_64'</span><span class="p">,</span> <span class="s1">'rvalue_32'</span><span class="p">,</span> 
+               <span class="s1">'pvalue_64'</span><span class="p">,</span> <span class="s1">'pvalue_32'</span><span class="p">]</span>
+        <span class="p">)</span>
+
+<span class="n">summarize_regressions</span><span class="p">(</span><span class="n">planets</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x</th>
+      <th>y</th>
+      <th>slope_64</th>
+      <th>slope_32</th>
+      <th>intercept_64</th>
+      <th>intercept_32</th>
+      <th>rvalue_64</th>
+      <th>rvalue_32</th>
+      <th>pvalue_64</th>
+      <th>pvalue_32</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>orbital_period</td>
+      <td>mass</td>
+      <td>0.000458</td>
+      <td>0.000458</td>
+      <td>2.126813</td>
+      <td>2.126813</td>
+      <td>0.184906</td>
+      <td>0.184906</td>
+      <td>3.298188e-05</td>
+      <td>3.298188e-05</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>orbital_period</td>
+      <td>distance</td>
+      <td>-0.001112</td>
+      <td>-0.001112</td>
+      <td>52.997824</td>
+      <td>52.997825</td>
+      <td>-0.035069</td>
+      <td>-0.035069</td>
+      <td>4.348817e-01</td>
+      <td>4.348817e-01</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>mass</td>
+      <td>distance</td>
+      <td>3.512154</td>
+      <td>3.512154</td>
+      <td>43.255093</td>
+      <td>43.255095</td>
+      <td>0.274082</td>
+      <td>0.274082</td>
+      <td>4.954410e-10</td>
+      <td>4.954411e-10</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The output is another summary table, this time showing us the slope, intercept, rvalue and pvalue for each pair of columns in both 64 bit and 32 bit form. As in the summary statistics, this makes it easy to find the differences in the various regression properties. Here's the difference in slope as a proportion of the original slope:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_regressions</span><span class="p">(</span><span class="n">planets</span><span class="p">)</span>
+<span class="p">(</span><span class="n">summary</span><span class="p">[</span><span class="s1">'slope_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">summary</span><span class="p">[</span><span class="s1">'slope_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">summary</span><span class="p">[</span><span class="s1">'slope_64'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0    3.637540e-09
+1   -3.431153e-08
+2    8.654275e-09
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Part-three:-looking-at-the-results">
+<a class="anchor" href="#Part-three:-looking-at-the-results" aria-hidden="true"><span class="octicon octicon-link"></span></a>Part three: looking at the results<a class="anchor-link" href="#Part-three:-looking-at-the-results"> </a>
+</h2>
+<p>Having written the functions above, actually analysing all of the downloaded data files is pretty straightforward. We will use <code>glob</code> to iterate over the folders, and just call the functions in order.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">tqdm.notebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*-*/*.csv'</span><span class="p">)):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">get_float_columns</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_columns</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="n">summary</span><span class="p">[</span><span class="s1">'filepath'</span><span class="p">]</span> <span class="o">=</span> <span class="n">filepath</span>
+        <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+        
+<span class="n">summary_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>At the end of the process we have a big dataframe that contains the summary for all the data files:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary_stats</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count_32</th>
+      <th>mean_32</th>
+      <th>std_32</th>
+      <th>min_32</th>
+      <th>25%_32</th>
+      <th>50%_32</th>
+      <th>75%_32</th>
+      <th>max_32</th>
+      <th>count_64</th>
+      <th>mean_64</th>
+      <th>...</th>
+      <th>max_64</th>
+      <th>count_64_abs</th>
+      <th>mean_64_abs</th>
+      <th>std_64_abs</th>
+      <th>min_64_abs</th>
+      <th>25%_64_abs</th>
+      <th>50%_64_abs</th>
+      <th>75%_64_abs</th>
+      <th>max_64_abs</th>
+      <th>filepath</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>BMI</th>
+      <td>768.0</td>
+      <td>31.992579</td>
+      <td>7.884161</td>
+      <td>0.000</td>
+      <td>27.299999</td>
+      <td>32.000000</td>
+      <td>36.599998</td>
+      <td>67.099998</td>
+      <td>768.0</td>
+      <td>31.992578</td>
+      <td>...</td>
+      <td>67.10</td>
+      <td>768.0</td>
+      <td>31.992578</td>
+      <td>7.884160</td>
+      <td>0.000</td>
+      <td>27.300000</td>
+      <td>32.000000</td>
+      <td>36.600000</td>
+      <td>67.10</td>
+      <td>uciml-pima-indians-diabetes-database/diabetes.csv</td>
+    </tr>
+    <tr>
+      <th>DiabetesPedigreeFunction</th>
+      <td>768.0</td>
+      <td>0.471876</td>
+      <td>0.331329</td>
+      <td>0.078</td>
+      <td>0.243750</td>
+      <td>0.372500</td>
+      <td>0.626250</td>
+      <td>2.420000</td>
+      <td>768.0</td>
+      <td>0.471876</td>
+      <td>...</td>
+      <td>2.42</td>
+      <td>768.0</td>
+      <td>0.471876</td>
+      <td>0.331329</td>
+      <td>0.078</td>
+      <td>0.243750</td>
+      <td>0.372500</td>
+      <td>0.626250</td>
+      <td>2.42</td>
+      <td>uciml-pima-indians-diabetes-database/diabetes.csv</td>
+    </tr>
+    <tr>
+      <th>MILES*</th>
+      <td>1156.0</td>
+      <td>21.115400</td>
+      <td>359.299011</td>
+      <td>0.500</td>
+      <td>2.900000</td>
+      <td>6.000000</td>
+      <td>10.400000</td>
+      <td>12204.700195</td>
+      <td>1156.0</td>
+      <td>21.115398</td>
+      <td>...</td>
+      <td>12204.70</td>
+      <td>1156.0</td>
+      <td>21.115398</td>
+      <td>359.299007</td>
+      <td>0.500</td>
+      <td>2.900000</td>
+      <td>6.000000</td>
+      <td>10.400000</td>
+      <td>12204.70</td>
+      <td>zusmani-uberdrives/My Uber Drives - 2016.csv</td>
+    </tr>
+    <tr>
+      <th>avg_rating</th>
+      <td>13608.0</td>
+      <td>3.923293</td>
+      <td>1.031304</td>
+      <td>0.000</td>
+      <td>3.800000</td>
+      <td>4.194440</td>
+      <td>4.450000</td>
+      <td>5.000000</td>
+      <td>13608.0</td>
+      <td>3.923293</td>
+      <td>...</td>
+      <td>5.00</td>
+      <td>13608.0</td>
+      <td>3.923293</td>
+      <td>1.031304</td>
+      <td>0.000</td>
+      <td>3.800000</td>
+      <td>4.194440</td>
+      <td>4.450000</td>
+      <td>5.00</td>
+      <td>jilkothari-finance-accounting-courses-udemy-13...</td>
+    </tr>
+    <tr>
+      <th>avg_rating_recent</th>
+      <td>13608.0</td>
+      <td>3.912241</td>
+      <td>1.039237</td>
+      <td>0.000</td>
+      <td>3.787315</td>
+      <td>4.181735</td>
+      <td>4.452105</td>
+      <td>5.000000</td>
+      <td>13608.0</td>
+      <td>3.912242</td>
+      <td>...</td>
+      <td>5.00</td>
+      <td>13608.0</td>
+      <td>3.912242</td>
+      <td>1.039237</td>
+      <td>0.000</td>
+      <td>3.787315</td>
+      <td>4.181735</td>
+      <td>4.452105</td>
+      <td>5.00</td>
+      <td>jilkothari-finance-accounting-courses-udemy-13...</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 25 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's first take a look at the volume of data. We have processed 919 data files:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary_stats</span><span class="p">[</span><span class="s1">'filepath'</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>919</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>containing just over 8000 floating point columns:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">summary_stats</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'index'</span><span class="p">,</span> <span class="s1">'filepath'</span><span class="p">]))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>8040</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>and just over half a billion individual floating point values:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary_stats</span><span class="p">[</span><span class="s1">'count_64'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>520432586.0</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One slight complication is that some of our data files contain very large values that will be outside the range of 32 bit floating point numbers. It's easy to spot those in the file as the maximum of the 32 bit version will end up infinite:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">summary_stats</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">summary_stats</span><span class="p">[</span><span class="s1">'max_32'</span><span class="p">])]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count_32</th>
+      <th>mean_32</th>
+      <th>std_32</th>
+      <th>min_32</th>
+      <th>25%_32</th>
+      <th>50%_32</th>
+      <th>75%_32</th>
+      <th>max_32</th>
+      <th>count_64</th>
+      <th>mean_64</th>
+      <th>...</th>
+      <th>max_64</th>
+      <th>count_64_abs</th>
+      <th>mean_64_abs</th>
+      <th>std_64_abs</th>
+      <th>min_64_abs</th>
+      <th>25%_64_abs</th>
+      <th>50%_64_abs</th>
+      <th>75%_64_abs</th>
+      <th>max_64_abs</th>
+      <th>filepath</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>PublicScoreLeaderboardDisplay</th>
+      <td>8357340.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-inf</td>
+      <td>0.4333</td>
+      <td>0.69630</td>
+      <td>0.93937</td>
+      <td>inf</td>
+      <td>8357340.0</td>
+      <td>8.374128e+295</td>
+      <td>...</td>
+      <td>6.567444e+302</td>
+      <td>8357340.0</td>
+      <td>8.374128e+295</td>
+      <td>inf</td>
+      <td>0.0</td>
+      <td>0.45359</td>
+      <td>0.71052</td>
+      <td>0.94674</td>
+      <td>6.567444e+302</td>
+      <td>kaggle-meta-kaggle/Submissions.csv</td>
+    </tr>
+    <tr>
+      <th>PrivateScoreLeaderboardDisplay</th>
+      <td>8357340.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>-inf</td>
+      <td>0.4352</td>
+      <td>0.70579</td>
+      <td>0.93160</td>
+      <td>inf</td>
+      <td>8357340.0</td>
+      <td>1.094999e+296</td>
+      <td>...</td>
+      <td>6.870993e+302</td>
+      <td>8357340.0</td>
+      <td>1.094999e+296</td>
+      <td>inf</td>
+      <td>0.0</td>
+      <td>0.45700</td>
+      <td>0.72148</td>
+      <td>0.94210</td>
+      <td>6.870993e+302</td>
+      <td>kaggle-meta-kaggle/Submissions.csv</td>
+    </tr>
+  </tbody>
+</table>
+<p>2 rows × 25 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It's also pretty easy to remove them from the results:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">summary_stats</span><span class="p">[</span> <span class="o">~</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">summary_stats</span><span class="p">[</span><span class="s1">'max_32'</span><span class="p">])]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Looking-at-changes-in-summary-statistics">
+<a class="anchor" href="#Looking-at-changes-in-summary-statistics" aria-hidden="true"><span class="octicon octicon-link"></span></a>Looking at changes in summary statistics<a class="anchor-link" href="#Looking-at-changes-in-summary-statistics"> </a>
+</h3>
+<p>Now we can start to address the questions of how much effect changing to 32 bit precision had on the data. Since the <code>results</code> dataframe is in the same format as our earlier planets example, the code will be very similar. We can calculate the absolute error:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'mean_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="s1">'mean_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>BMI                         3.814697e-07
+DiabetesPedigreeFunction    8.662542e-09
+MILES*                      2.390456e-06
+avg_rating                  3.664424e-08
+avg_rating_recent           1.100372e-07
+                                ...     
+5a_credit_market_reg        5.570170e-07
+5b_labor_market_reg         2.104992e-07
+5c_business_reg             3.096381e-07
+5_regulation                3.479504e-07
+oldpeak                     1.180290e-08
+Length: 8038, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>but since we have so many values, we need to summarize them. We can do this with summary statistics:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'mean_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="s1">'mean_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>count    8.038000e+03
+mean     3.698345e+06
+std      3.315559e+08
+min      0.000000e+00
+25%      2.756953e-08
+50%      4.126828e-07
+75%      3.578393e-06
+max      2.972561e+10
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Notice that we have a pretty wild distribution here. The mean absolute error is about three million, but the median (50% in the above table) is 0.0000004! This is why we need to normalize these by viewing them as a proportion of the original mean of absolute values:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">prop_errors</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'mean_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="s1">'mean_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">results</span><span class="p">[</span><span class="s1">'mean_64_abs'</span><span class="p">]</span>
+<span class="n">prop_errors</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>count    8.038000e+03
+mean     4.340236e-08
+std      5.796892e-08
+min      0.000000e+00
+25%      1.366587e-08
+50%      3.117527e-08
+75%      5.799712e-08
+max      1.963675e-06
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is easier to look at. The mean and median proportional error are both on the order of 10<sup>-8</sup>, and the worst affected data column has its mean altered by around 10<sup>-6</sup>. In practical terms, these are incredibly minor effects. We can easily view them as a distribution to see the long tail:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span>
+    <span class="n">prop_errors</span><span class="p">,</span>
+    <span class="n">aspect</span><span class="o">=</span><span class="mi">2</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;seaborn.axisgrid.FacetGrid at 0x7f609ba57fa0&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can do the same thing for the other aggregations of the original data - let's add the median (50% in our table) and the max. Calculating the proportional error in the minimum is tricky, since for many data columns the minimum value will be zero, leading to an infinite proportional error, so we will skip it.</p>
+<p>Adding these measurements as additional columns:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">results</span><span class="p">[</span><span class="s1">'mean prop error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'mean_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="s1">'mean_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">results</span><span class="p">[</span><span class="s1">'mean_64_abs'</span><span class="p">]</span>
+<span class="n">results</span><span class="p">[</span><span class="s1">'median prop error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'50%_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="s1">'50%_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">results</span><span class="p">[</span><span class="s1">'50%_64_abs'</span><span class="p">]</span>
+<span class="n">results</span><span class="p">[</span><span class="s1">'max prop error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'max_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">results</span><span class="p">[</span><span class="s1">'max_32'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">/</span> <span class="n">results</span><span class="p">[</span><span class="s1">'max_64_abs'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>will allow us to make a summary table:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">results</span><span class="p">[[</span><span class="s1">'mean prop error'</span><span class="p">,</span> <span class="s1">'median prop error'</span><span class="p">,</span> <span class="s1">'max prop error'</span><span class="p">]]</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>mean prop error</th>
+      <th>median prop error</th>
+      <th>max prop error</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>8.038000e+03</td>
+      <td>7.835000e+03</td>
+      <td>8.038000e+03</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>4.340236e-08</td>
+      <td>1.546485e-08</td>
+      <td>1.370840e-08</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>5.796892e-08</td>
+      <td>1.516289e-08</td>
+      <td>1.422228e-08</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>1.366587e-08</td>
+      <td>1.382856e-09</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>3.117527e-08</td>
+      <td>1.254835e-08</td>
+      <td>1.014960e-08</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>5.799712e-08</td>
+      <td>2.447450e-08</td>
+      <td>2.442311e-08</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>1.963675e-06</td>
+      <td>1.067892e-07</td>
+      <td>5.848003e-08</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>A little bit of rearrangement using <code>melt</code> will allow us to look at the distribution of proportional errors for all three summary statistics:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">displot</span><span class="p">(</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">results</span><span class="p">[[</span><span class="s1">'mean prop error'</span><span class="p">,</span> <span class="s1">'median prop error'</span><span class="p">,</span> <span class="s1">'max prop error'</span><span class="p">]]</span><span class="o">.</span><span class="n">melt</span><span class="p">(),</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="s1">'value'</span><span class="p">,</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="s1">'variable'</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2e-7</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(0.0, 2e-07)</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Looking-at-linear-regressions">
+<a class="anchor" href="#Looking-at-linear-regressions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Looking at linear regressions<a class="anchor-link" href="#Looking-at-linear-regressions"> </a>
+</h3>
+<p>Now we can build a similar dataframe for the linear regression results. The logic is very similar to the summary statistics; we are just using the <code>summarize_regressions</code> function instead:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">tqdm.notebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*-*/*.csv'</span><span class="p">)):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">get_float_columns</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">summarize_regressions</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">summary</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s1">'filepath'</span><span class="p">]</span> <span class="o">=</span> <span class="n">filepath</span>
+            <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+        
+<span class="n">regressions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The resulting dataframe has the same wide shape as before, but this time each row represents a regression result between two columns from the same data file. We have just over half a million regression results in total:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">regressions</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>x</th>
+      <th>y</th>
+      <th>slope_64</th>
+      <th>slope_32</th>
+      <th>intercept_64</th>
+      <th>intercept_32</th>
+      <th>rvalue_64</th>
+      <th>rvalue_32</th>
+      <th>pvalue_64</th>
+      <th>pvalue_32</th>
+      <th>filepath</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>BMI</td>
+      <td>DiabetesPedigreeFunction</td>
+      <td>5.910630e-03</td>
+      <td>5.910631e-03</td>
+      <td>0.282780</td>
+      <td>0.282780</td>
+      <td>0.140647</td>
+      <td>0.140647</td>
+      <td>9.197970e-05</td>
+      <td>9.197967e-05</td>
+      <td>uciml-pima-indians-diabetes-database/diabetes.csv</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>avg_rating</td>
+      <td>avg_rating_recent</td>
+      <td>9.968315e-01</td>
+      <td>9.968315e-01</td>
+      <td>0.001379</td>
+      <td>0.001379</td>
+      <td>0.989222</td>
+      <td>0.989222</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>jilkothari-finance-accounting-courses-udemy-13...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>avg_rating</td>
+      <td>rating</td>
+      <td>9.968315e-01</td>
+      <td>9.968315e-01</td>
+      <td>0.001379</td>
+      <td>0.001379</td>
+      <td>0.989222</td>
+      <td>0.989222</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>jilkothari-finance-accounting-courses-udemy-13...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>avg_rating_recent</td>
+      <td>rating</td>
+      <td>1.000000e+00</td>
+      <td>1.000000e+00</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+      <td>jilkothari-finance-accounting-courses-udemy-13...</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>ts</td>
+      <td>co</td>
+      <td>1.613924e-10</td>
+      <td>1.613926e-10</td>
+      <td>-0.252759</td>
+      <td>-0.252759</td>
+      <td>0.025757</td>
+      <td>0.025758</td>
+      <td>1.964944e-60</td>
+      <td>1.964217e-60</td>
+      <td>garystafford-environmental-sensor-data-132k/io...</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>401</th>
+      <td>5a_credit_market_reg</td>
+      <td>5c_business_reg</td>
+      <td>3.975257e-01</td>
+      <td>3.975257e-01</td>
+      <td>2.992313</td>
+      <td>2.992313</td>
+      <td>0.444242</td>
+      <td>0.444242</td>
+      <td>3.433446e-65</td>
+      <td>3.433454e-65</td>
+      <td>gsutters-economic-freedom/efw_cc.csv</td>
+    </tr>
+    <tr>
+      <th>402</th>
+      <td>5a_credit_market_reg</td>
+      <td>5_regulation</td>
+      <td>5.486941e-01</td>
+      <td>5.486941e-01</td>
+      <td>2.423950</td>
+      <td>2.423951</td>
+      <td>0.747747</td>
+      <td>0.747747</td>
+      <td>1.517789e-237</td>
+      <td>1.517798e-237</td>
+      <td>gsutters-economic-freedom/efw_cc.csv</td>
+    </tr>
+    <tr>
+      <th>403</th>
+      <td>5b_labor_market_reg</td>
+      <td>5c_business_reg</td>
+      <td>3.465142e-01</td>
+      <td>3.465142e-01</td>
+      <td>4.137618</td>
+      <td>4.137618</td>
+      <td>0.394059</td>
+      <td>0.394059</td>
+      <td>1.834371e-50</td>
+      <td>1.834375e-50</td>
+      <td>gsutters-economic-freedom/efw_cc.csv</td>
+    </tr>
+    <tr>
+      <th>404</th>
+      <td>5b_labor_market_reg</td>
+      <td>5_regulation</td>
+      <td>5.288462e-01</td>
+      <td>5.288462e-01</td>
+      <td>3.682333</td>
+      <td>3.682333</td>
+      <td>0.733397</td>
+      <td>0.733397</td>
+      <td>5.207614e-224</td>
+      <td>5.207626e-224</td>
+      <td>gsutters-economic-freedom/efw_cc.csv</td>
+    </tr>
+    <tr>
+      <th>405</th>
+      <td>5c_business_reg</td>
+      <td>5_regulation</td>
+      <td>6.481920e-01</td>
+      <td>6.481920e-01</td>
+      <td>2.940607</td>
+      <td>2.940607</td>
+      <td>0.790448</td>
+      <td>0.790448</td>
+      <td>6.484037e-284</td>
+      <td>6.484023e-284</td>
+      <td>gsutters-economic-freedom/efw_cc.csv</td>
+    </tr>
+  </tbody>
+</table>
+<p>550136 rows × 11 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Because the number of pairwise comparisons increases with the square of the number of columns, the results are dominated by a small number of data files with many floating point columns:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">regressions</span><span class="p">[</span><span class="s1">'filepath'</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>rajanand-key-indicators-of-annual-health-survey/Key_indicator_districtwise.csv                           182710
+uciml-human-activity-recognition-with-smartphones/train.csv                                              157080
+uciml-human-activity-recognition-with-smartphones/test.csv                                               157080
+johnjdavisiv-us-counties-covid19-weather-sociohealth-data/US_counties_COVID19_health_weather_data.csv     11175
+johnjdavisiv-us-counties-covid19-weather-sociohealth-data/us_county_sociohealth_data.csv                   7260
+                                                                                                          ...  
+chrisfilo-urbansound8k/UrbanSound8K.csv                                                                       1
+johnjdavisiv-us-counties-covid19-weather-sociohealth-data/us_county_geometry.csv                              1
+tunguz-us-elections-dataset/2016-precinct-house.csv                                                           1
+sudalairajkumar-novel-corona-virus-2019-dataset/time_series_covid_19_confirmed_US.csv                         1
+prakrutchauhan-indian-candidates-for-general-election-2019/LS_2.0.csv                                         1
+Name: filepath, Length: 289, dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Out of our 919 data files, only 289 had at least two floating point columns. The data file with the most floating point columns contributes nearly two hundred thousand regression results!</p>
+<p>To get an overview of the difference for each property of the regression result, we can add new columns as we did before and summarize them:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">regressions</span><span class="p">[</span><span class="s1">'slope error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">regressions</span><span class="p">[</span><span class="s1">'slope_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'slope_32'</span><span class="p">])</span> <span class="o">/</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'slope_64'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+<span class="n">regressions</span><span class="p">[</span><span class="s1">'intercept error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">regressions</span><span class="p">[</span><span class="s1">'intercept_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'intercept_32'</span><span class="p">])</span> <span class="o">/</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'intercept_64'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+<span class="n">regressions</span><span class="p">[</span><span class="s1">'rvalue error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">regressions</span><span class="p">[</span><span class="s1">'rvalue_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'rvalue_32'</span><span class="p">])</span> <span class="o">/</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'rvalue_64'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+<span class="n">regressions</span><span class="p">[</span><span class="s1">'pvalue error'</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">regressions</span><span class="p">[</span><span class="s1">'pvalue_64'</span><span class="p">]</span> <span class="o">-</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'pvalue_32'</span><span class="p">])</span> <span class="o">/</span> <span class="n">regressions</span><span class="p">[</span><span class="s1">'pvalue_64'</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+
+<span class="n">regressions</span><span class="p">[[</span><span class="s1">'slope error'</span><span class="p">,</span> <span class="s1">'intercept error'</span><span class="p">,</span> <span class="s1">'rvalue error'</span><span class="p">,</span> <span class="s1">'pvalue error'</span><span class="p">]]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>slope error</th>
+      <th>intercept error</th>
+      <th>rvalue error</th>
+      <th>pvalue error</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>4.181990e+05</td>
+      <td>4.181990e+05</td>
+      <td>4.181990e+05</td>
+      <td>4.181990e+05</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>4.237303e-04</td>
+      <td>7.675898e-05</td>
+      <td>4.237294e-04</td>
+      <td>1.471530e-06</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>2.486475e-02</td>
+      <td>1.618511e-02</td>
+      <td>2.486475e-02</td>
+      <td>8.407760e-06</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000e+00</td>
+      <td>2.753007e-13</td>
+      <td>0.000000e+00</td>
+      <td>0.000000e+00</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>4.304286e-09</td>
+      <td>1.899837e-08</td>
+      <td>3.850181e-09</td>
+      <td>1.095305e-07</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>1.669817e-08</td>
+      <td>3.986912e-08</td>
+      <td>1.547252e-08</td>
+      <td>3.511528e-07</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>6.553311e-08</td>
+      <td>7.240586e-08</td>
+      <td>6.388698e-08</td>
+      <td>1.105768e-06</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>4.985437e+00</td>
+      <td>4.448138e+00</td>
+      <td>4.985437e+00</td>
+      <td>2.476720e-03</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Notice that in the <code>count</code> row we can see how many of the comparisons gave meaningful (i.e. non-missing) output for the linear regressions on both the 64 and 32 bit versions.</p>
+<p>Remember that these are proportional errors i.e. the proportion by which the values change. Although the mean errors are a couple of orders of magnitude greater than for the summary statistics, they are still very small, and very unlikely to change any conclusions about the data.</p>
+<p>We have a very long tailed distribution for all four properties: the mean is several orders of magnitude higher than the median (50%) and the maximum values are several orders of magnitude higher again, suggesting a small number of extreme outliers. One way to show this is with a boxen plot:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">catplot</span><span class="p">(</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">regressions</span><span class="p">[[</span><span class="s1">'slope error'</span><span class="p">,</span> <span class="s1">'intercept error'</span><span class="p">,</span> <span class="s1">'rvalue error'</span><span class="p">,</span> <span class="s1">'pvalue error'</span><span class="p">]]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">melt</span><span class="p">(),</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="s1">'variable'</span><span class="p">,</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="s1">'value'</span><span class="p">,</span>
+    <span class="n">kind</span><span class="o">=</span><span class="s1">'boxen'</span><span class="p">,</span>
+    <span class="n">aspect</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>&lt;seaborn.axisgrid.FacetGrid at 0x7f60e525e1f0&gt;</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The presence of the outliers make it impossible to see the distribution of the remaining values. If we plot the slope against the slope error, we can see that these outliers all represent regressions where the original slope was very near zero, suggesting no interesting relationship between the variables:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">relplot</span><span class="p">(</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">regressions</span><span class="p">,</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="s1">'slope_64'</span><span class="p">,</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="s1">'slope error'</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">1e-8</span><span class="p">,</span><span class="mf">1e-8</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(-1e-08, 1e-08)</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The same is true for the intercept:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">relplot</span><span class="p">(</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">regressions</span><span class="p">,</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="s1">'intercept_64'</span><span class="p">,</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="s1">'intercept error'</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">1e-5</span><span class="p">,</span><span class="mf">1e-5</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(-1e-05, 1e-05)</pre>
+</div>
+
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>An alternative way of looking at the pvalue error is to ask whether the change in pvalue would result in a difference in whether the relationship was considered significant. Setting aside the problems with interpreting pvalues in this way, we can use pandas to find any regressions where one version of the regression was significant at the 5% level and the other wasn't:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">((</span><span class="n">regressions</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'pvalue_64'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">regressions</span><span class="o">.</span><span class="n">dropna</span><span class="p">()[</span><span class="s1">'pvalue_32'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">))</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>False    418199
+dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the ~400,000 out of our ~500,000 comparisions that had no missing data, there were no such cases.</p>
+<h2 id="Conclusion">
+<a class="anchor" href="#Conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion<a class="anchor-link" href="#Conclusion"> </a>
+</h2>
+<p>It looks like in real world datasets, switching from 64 bit to 32 bit precision for floating point numbers has a vanishingly small chance of affecting our conclusions, and we should probably do it without fear when trying to minimize memory usage.</p>
+<p>If you've made it this far, you should definitely subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a>, <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>, or buy the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>!</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><a class="u-url" href="/pandas/numpy/kaggle/2020/12/01/Article.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Data exploration and visualization with Python, pandas, seaborn and matplotlib</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
