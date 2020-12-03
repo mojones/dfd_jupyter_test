@@ -109,20 +109,17 @@ window.onload = wrap_img;
     <ul class="section-nav">
 <li class="toc-entry toc-h3"><a href="#Executive-summary">Executive summary </a></li>
 <li class="toc-entry toc-h3"><a href="#Slightly-longer-summary">Slightly longer summary </a></li>
-<li class="toc-entry toc-h2"><a href="#Introduction">Introduction </a>
+<li class="toc-entry toc-h2"><a href="#Introduction">Introduction </a></li>
+<li class="toc-entry toc-h2"><a href="#Part-one:-changing-data-types-and-measuring-differences">Part one: changing data types and measuring differences </a>
 <ul>
-<li class="toc-entry toc-h3"><a href="#Part-one:-changing-data-types-and-measuring-differences">Part one: changing data types and measuring differences </a></li>
 <li class="toc-entry toc-h3"><a href="#Proportional-differences">Proportional differences </a></li>
+<li class="toc-entry toc-h3"><a href="#Comparing-correlations">Comparing correlations </a></li>
 </ul>
 </li>
-<li class="toc-entry toc-h2"><a href="#Comparing-correlations">Comparing correlations </a></li>
 <li class="toc-entry toc-h2"><a href="#Part-two:-let's-try-it-on-a-larger-scale">Part two: let&#39;s try it on a larger scale </a>
 <ul>
 <li class="toc-entry toc-h3"><a href="#Downloading-the-data">Downloading the data </a></li>
-</ul>
-</li>
-<li class="toc-entry toc-h2"><a href="#Processing-the-downloaded-files">Processing the downloaded files </a>
-<ul>
+<li class="toc-entry toc-h3"><a href="#Processing-the-downloaded-files">Processing the downloaded files </a></li>
 <li class="toc-entry toc-h3"><a href="#Comparing-summary-statistics">Comparing summary statistics </a></li>
 <li class="toc-entry toc-h3"><a href="#Comparing-linear-regressions">Comparing linear regressions </a></li>
 </ul>
@@ -171,9 +168,9 @@ window.onload = wrap_img;
 <p>Obviously, I think that pandas is wonderful :-) But it has a number of quirks, among them a reputation for being memory hungry. There are no shortage of articles online discussing how to fit large dataframes in memory, and there are a number of well established techniques (there's a whole chapter on the subject in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>, and also an extended discussion in the car accidents dataset video).</p>
 <p>One technique that always gets mentioned is storing numbers in a reduced precision data type. This is usually proposed as one of the last things to try after other options have been exhausted. I think there are a couple of reasons for this. One is that messing about with data types is a bit harder to explain than simple things like ignoring unneeded columns. Another is that deliberately throwing away information - which is what reducing precision will do - feels very uncomfortable from a data analysis point of view!</p>
 <p>One thing that I've rarely seen in such discussions is a measurement of how much of an effect reduced precision will have in real life datasets. This is surprising, since pandas makes it very easy to measure. So let's go ahead and try it...</p>
-<h3 id="Part-one:-changing-data-types-and-measuring-differences">
+<h2 id="Part-one:-changing-data-types-and-measuring-differences">
 <a class="anchor" href="#Part-one:-changing-data-types-and-measuring-differences" aria-hidden="true"><span class="octicon octicon-link"></span></a>Part one: changing data types and measuring differences<a class="anchor-link" href="#Part-one:-changing-data-types-and-measuring-differences"> </a>
-</h3>
+</h2>
 <p>Before we dive in, a quick reminder of the pandas tools we'll use. All of the methods etc. are described in detail in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>, so we'll limit ourselves here to an overview.</p>
 <p>As an example, let's load the planets dataset:</p>
 
@@ -942,9 +939,9 @@ Name: orbital_period, dtype: float64</pre>
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Comparing-correlations">
+<h3 id="Comparing-correlations">
 <a class="anchor" href="#Comparing-correlations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparing correlations<a class="anchor-link" href="#Comparing-correlations"> </a>
-</h2>
+</h3>
 <p>Another way to measure the effect of reduced precision is to see if it changes the correlation between floating point columns. In our planets dataset we have two other floating point columns: the mass and the distance. Using pandas' built in <code>corr</code> method we can calculate the pairwise pearson correlation of all the floating point columns:</p>
 
 </div>
@@ -1298,9 +1295,9 @@ proportional R value difference : -9.365612763031196e-10
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Processing-the-downloaded-files">
+<h3 id="Processing-the-downloaded-files">
 <a class="anchor" href="#Processing-the-downloaded-files" aria-hidden="true"><span class="octicon octicon-link"></span></a>Processing the downloaded files<a class="anchor-link" href="#Processing-the-downloaded-files"> </a>
-</h2>
+</h3>
 <p>Now that we've done the download step, we can get on to reading our data files and measuring the effect of reducing precision. Let's take a look at the function to take a single file and just give us the columns we're interested in:</p>
 
 </div>
@@ -2704,7 +2701,7 @@ dtype: float64</pre>
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>If you want to play with the data, you can download a compressed version here</p>
+<p>If you want to play with the data, you can <a href="https://github.com/mojones/dfd_jupyter_test/raw/master/_notebooks/regressions.csv.gz">download a compressed version here</a>.</p>
 <p>The resulting dataframe has the same wide shape as before, but this time each row represents a regression result between two columns from the same data file. We have just over half a million regression results in total:</p>
 
 </div>
