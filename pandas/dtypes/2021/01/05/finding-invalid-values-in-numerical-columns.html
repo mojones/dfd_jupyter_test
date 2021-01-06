@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Finding invalid values in numerical columns | Drawing from Data</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Finding invalid values in numerical columns" />
+<meta name="author" content="Martin" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Real life datasets, especially ones that have been manually curated, often contain mixed data types. The first step to fixing invalid values is to get an idea of their distribution." />
+<meta property="og:description" content="Real life datasets, especially ones that have been manually curated, often contain mixed data types. The first step to fixing invalid values is to get an idea of their distribution." />
+<link rel="canonical" href="https://drawingfromdata.com/pandas/dtypes/2021/01/05/finding-invalid-values-in-numerical-columns.html" />
+<meta property="og:url" content="https://drawingfromdata.com/pandas/dtypes/2021/01/05/finding-invalid-values-in-numerical-columns.html" />
+<meta property="og:site_name" content="Drawing from Data" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-05T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://drawingfromdata.com/pandas/dtypes/2021/01/05/finding-invalid-values-in-numerical-columns.html","@type":"BlogPosting","headline":"Finding invalid values in numerical columns","dateModified":"2021-01-05T00:00:00-06:00","datePublished":"2021-01-05T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://drawingfromdata.com/pandas/dtypes/2021/01/05/finding-invalid-values-in-numerical-columns.html"},"author":{"@type":"Person","name":"Martin"},"description":"Real life datasets, especially ones that have been manually curated, often contain mixed data types. The first step to fixing invalid values is to get an idea of their distribution.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://drawingfromdata.com/feed.xml" title="Drawing from Data" /><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+<script async defer src="https://san.drawingfromdata.com/latest.js"></script>
+  <noscript><img src="https://san.drawingfromdata.com/noscript.gif" alt=""/></noscript>
+  
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Drawing from Data</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About Me</a><a class="page-link" href="/newsletter/">Newsletter</a><a class="page-link" href="/search/">Search</a><a class="page-link" href="/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Finding invalid values in numerical columns</h1><p class="page-description">Real life datasets, especially ones that have been manually curated, often contain mixed data types. The first step to fixing invalid values is to get an idea of their distribution.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-05T00:00:00-06:00" itemprop="datePublished">
+        Jan 5, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Martin</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      24 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/categories/#pandas">pandas</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#dtypes">dtypes</a>
+        
+      
+      </p>
+    
+
+    
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#Introduction">Introduction </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#The-MMA-dataset">The MMA dataset </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Which-values-can't-be-converted?">Which values can&#39;t be converted? </a></li>
+<li class="toc-entry toc-h2"><a href="#Dealing-with-many-invalid-values">Dealing with many invalid values </a></li>
+<li class="toc-entry toc-h2"><a href="#Extending-to-other-data-types">Extending to other data types </a></li>
+<li class="toc-entry toc-h2"><a href="#Conclusion">Conclusion </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/finding invalid values in numerical columns.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Introduction">
+<a class="anchor" href="#Introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction<a class="anchor-link" href="#Introduction"> </a>
+</h2>
+<p>In an ideal world, every time we load a data file into pandas we will end up with a nice neat dataframe with well defined columns. In the real world, however, we often end up with columns that contain values in a mixture of different formats. This makes it hard to carry out our analyses. In this article we'll look at a simple way to quickly identify invalid values so that we can fix them.</p>
+<p>As always, to keep this article to a reasonable size we won't be going in to too much detail on the methods involved. All of the methods we'll use here are covered in detail in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>. In particular, check out chapter 2 for a discussion of data types and chapter 16 for a discussion of the memory implications.</p>
+<p>If you're interested in more articles and tips on data exploration with Python, you should subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a> or <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>.</p>
+<h3 id="The-MMA-dataset">
+<a class="anchor" href="#The-MMA-dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>The MMA dataset<a class="anchor-link" href="#The-MMA-dataset"> </a>
+</h3>
+<p>For our example, we'll look at a real life data file taken from the Metropolitan Museum of Art in New York. The museum has published a dataset describing around half a million different artworks. The data are available as a CSV file <a href="https://github.com/metmuseum/openaccess/">in this GitHub repo</a>.</p>
+<p>This is a good dataset to explore when looking for messy formatting, for a number of reasons:</p>
+<ul>
+<li>it's <strong>large</strong>, so even rare errors are likely to be well represented. </li>
+<li>it's <strong>curated by humans</strong>, rather than being automatically generated, so it's likely to contain typos and other human errors</li>
+<li>furthermore, it's <strong>large enough to have multiple human contributors</strong>, so the data will likely reflect inconsistencies between different ideas about data entry</li>
+<li>it's very <strong>heterogeneous</strong> - the individual artworks are of very different types. We have data for paintings, sculptures, photography, ceramics, fabrics, etc. Any time we have multiple different types of objects being represented by a single data structure, we have the oppourtunity for messy data.</li>
+</ul>
+<p>Because the data are hosted on GitHub, we should be able to read them directly and take a look at the dataframe:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_columns</span><span class="o">=</span><span class="mi">4</span>
+<span class="n">met</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'https://github.com/metmuseum/openaccess/raw/master/MetObjects.csv'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>/home/martin/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/IPython/core/interactiveshell.py:3146: DtypeWarning: Columns (5,7,10,11,12,13,14,15,22,34,35,36,37,38,39,40,41,42,43,44,46) have mixed types.Specify dtype option on import or set low_memory=False.
+  has_raised = await self.run_ast_nodes(code_ast.body, cell_name,
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Notice that we immediately get a hint that something is weird in the data file when pandas complains about columns with mixed types. Let's ignore this for now and bravely press on with a look at the dataframe:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Object Number</th>
+      <th>Is Highlight</th>
+      <th>...</th>
+      <th>Tags AAT URL</th>
+      <th>Tags Wikidata URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1979.486.1</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1980.264.5</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>67.265.9</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>67.265.10</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>67.265.11</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>474521</th>
+      <td>07.225.14b</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300054534|http...</td>
+      <td>https://www.wikidata.org/wiki/Q333|https://www...</td>
+    </tr>
+    <tr>
+      <th>474522</th>
+      <td>69.292.12</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300250049|http...</td>
+      <td>https://www.wikidata.org/wiki/Q2092297|https:/...</td>
+    </tr>
+    <tr>
+      <th>474523</th>
+      <td>See attached list</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>474524</th>
+      <td>See attached list - chairs</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>474525</th>
+      <td>61.100.3c</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300266506</td>
+      <td>https://www.wikidata.org/wiki/Q5113</td>
+    </tr>
+  </tbody>
+</table>
+<p>474526 rows × 54 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>All looks OK here; we have a dataframe with just under half a million rows. There are too many columns to fit comfortably on the screen, so let's just check their names:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="o">.</span><span class="n">columns</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Index(['Object Number', 'Is Highlight', 'Is Timeline Work', 'Is Public Domain',
+       'Object ID', 'Gallery Number', 'Department', 'AccessionYear',
+       'Object Name', 'Title', 'Culture', 'Period', 'Dynasty', 'Reign',
+       'Portfolio', 'Constiuent ID', 'Artist Role', 'Artist Prefix',
+       'Artist Display Name', 'Artist Display Bio', 'Artist Suffix',
+       'Artist Alpha Sort', 'Artist Nationality', 'Artist Begin Date',
+       'Artist End Date', 'Artist Gender', 'Artist ULAN URL',
+       'Artist Wikidata URL', 'Object Date', 'Object Begin Date',
+       'Object End Date', 'Medium', 'Dimensions', 'Credit Line',
+       'Geography Type', 'City', 'State', 'County', 'Country', 'Region',
+       'Subregion', 'Locale', 'Locus', 'Excavation', 'River', 'Classification',
+       'Rights and Reproduction', 'Link Resource', 'Object Wikidata URL',
+       'Metadata Date', 'Repository', 'Tags', 'Tags AAT URL',
+       'Tags Wikidata URL'],
+      dtype='object')</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Most of these seem pretty self evident. We can see here a common pattern when representing multiple different types of objects in a single data structure: a large number of columns, many of which are mostly missing data. For example, all but 2000 values are missing from the River column:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'River'</span><span class="p">]</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>count                  2097
+unique                  229
+top       Upper Sepik River
+freq                    362
+Name: River, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Presumably there are a small number of objects that are associated with a particular river, and because we want to store that information we need a river column even though most of the objects don't have it.</p>
+<p>One of the most well-populated columns is accession year, with more than 99% of the values present:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">/</span> <span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.9916421860972845</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This makes sense. We would expect an art museum to have pretty thorough records of when each object was acquired.</p>
+<p>Let's remove any rows without an accession year:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span> <span class="o">=</span> <span class="n">met</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>then take a look at the series:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0         1979.0
+1         1980.0
+2         1967.0
+3         1967.0
+4         1967.0
+           ...  
+474519    1964.0
+474520    1978.0
+474521    1907.0
+474522    1969.0
+474525    1961.0
+Name: AccessionYear, Length: 470560, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This looks pretty straightforward, let's try to find all the objects that were acquired before 1950:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1950</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-8-ac1cd7060217&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>met<span class="ansi-blue-fg">[</span>met<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">'AccessionYear'</span><span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">&lt;</span> <span class="ansi-cyan-fg">1950</span><span class="ansi-blue-fg">]</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/ops/common.py</span> in <span class="ansi-cyan-fg">new_method</span><span class="ansi-blue-fg">(self, other)</span>
+<span class="ansi-green-intense-fg ansi-bold">     63</span>         other <span class="ansi-blue-fg">=</span> item_from_zerodim<span class="ansi-blue-fg">(</span>other<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     64</span> 
+<span class="ansi-green-fg">---&gt; 65</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> method<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> other<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     66</span> 
+<span class="ansi-green-intense-fg ansi-bold">     67</span>     <span class="ansi-green-fg">return</span> new_method
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arraylike.py</span> in <span class="ansi-cyan-fg">__lt__</span><span class="ansi-blue-fg">(self, other)</span>
+<span class="ansi-green-intense-fg ansi-bold">     35</span>     <span class="ansi-blue-fg">@</span>unpack_zerodim_and_defer<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"__lt__"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     36</span>     <span class="ansi-green-fg">def</span> __lt__<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> other<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">---&gt; 37</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_cmp_method<span class="ansi-blue-fg">(</span>other<span class="ansi-blue-fg">,</span> operator<span class="ansi-blue-fg">.</span>lt<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     38</span> 
+<span class="ansi-green-intense-fg ansi-bold">     39</span>     <span class="ansi-blue-fg">@</span>unpack_zerodim_and_defer<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"__le__"</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/series.py</span> in <span class="ansi-cyan-fg">_cmp_method</span><span class="ansi-blue-fg">(self, other, op)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4937</span>         rvalues <span class="ansi-blue-fg">=</span> extract_array<span class="ansi-blue-fg">(</span>other<span class="ansi-blue-fg">,</span> extract_numpy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4938</span> 
+<span class="ansi-green-fg">-&gt; 4939</span><span class="ansi-red-fg">         </span>res_values <span class="ansi-blue-fg">=</span> ops<span class="ansi-blue-fg">.</span>comparison_op<span class="ansi-blue-fg">(</span>lvalues<span class="ansi-blue-fg">,</span> rvalues<span class="ansi-blue-fg">,</span> op<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   4940</span> 
+<span class="ansi-green-intense-fg ansi-bold">   4941</span>         <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_construct_result<span class="ansi-blue-fg">(</span>res_values<span class="ansi-blue-fg">,</span> name<span class="ansi-blue-fg">=</span>res_name<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/ops/array_ops.py</span> in <span class="ansi-cyan-fg">comparison_op</span><span class="ansi-blue-fg">(left, right, op)</span>
+<span class="ansi-green-intense-fg ansi-bold">    241</span> 
+<span class="ansi-green-intense-fg ansi-bold">    242</span>     <span class="ansi-green-fg">elif</span> is_object_dtype<span class="ansi-blue-fg">(</span>lvalues<span class="ansi-blue-fg">.</span>dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 243</span><span class="ansi-red-fg">         </span>res_values <span class="ansi-blue-fg">=</span> comp_method_OBJECT_ARRAY<span class="ansi-blue-fg">(</span>op<span class="ansi-blue-fg">,</span> lvalues<span class="ansi-blue-fg">,</span> rvalues<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    244</span> 
+<span class="ansi-green-intense-fg ansi-bold">    245</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/ops/array_ops.py</span> in <span class="ansi-cyan-fg">comp_method_OBJECT_ARRAY</span><span class="ansi-blue-fg">(op, x, y)</span>
+<span class="ansi-green-intense-fg ansi-bold">     53</span>         result <span class="ansi-blue-fg">=</span> libops<span class="ansi-blue-fg">.</span>vec_compare<span class="ansi-blue-fg">(</span>x<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> y<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> op<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     54</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">---&gt; 55</span><span class="ansi-red-fg">         </span>result <span class="ansi-blue-fg">=</span> libops<span class="ansi-blue-fg">.</span>scalar_compare<span class="ansi-blue-fg">(</span>x<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> y<span class="ansi-blue-fg">,</span> op<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     56</span>     <span class="ansi-green-fg">return</span> result<span class="ansi-blue-fg">.</span>reshape<span class="ansi-blue-fg">(</span>x<span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     57</span> 
+
+<span class="ansi-green-fg">pandas/_libs/ops.pyx</span> in <span class="ansi-cyan-fg">pandas._libs.ops.scalar_compare</span><span class="ansi-blue-fg">()</span>
+
+<span class="ansi-red-fg">TypeError</span>: '&lt;' not supported between instances of 'str' and 'int'</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we have run into a problem. We were assuming that the accession year column was numeric based on the values that we saw, but it is actually of type <code>object</code>, as we can easily check:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>dtype('O')</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We might think to fix this by explicity changing the data type:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'int'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-10-d07a2f803482&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>met<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">'AccessionYear'</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">'int'</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/generic.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5870</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   5871</span>             <span class="ansi-red-fg"># else, only a single dtype is given</span>
+<span class="ansi-green-fg">-&gt; 5872</span><span class="ansi-red-fg">             </span>new_data <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_mgr<span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5873</span>             <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_constructor<span class="ansi-blue-fg">(</span>new_data<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__finalize__<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> method<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5874</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    629</span>         self<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">:</span> str <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">"raise"</span>
+<span class="ansi-green-intense-fg ansi-bold">    630</span>     ) -&gt; "BlockManager":
+<span class="ansi-green-fg">--&gt; 631</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    632</span> 
+<span class="ansi-green-intense-fg ansi-bold">    633</span>     def convert(
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">apply</span><span class="ansi-blue-fg">(self, f, align_keys, ignore_failures, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    425</span>                     applied <span class="ansi-blue-fg">=</span> b<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span>f<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    426</span>                 <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 427</span><span class="ansi-red-fg">                     </span>applied <span class="ansi-blue-fg">=</span> getattr<span class="ansi-blue-fg">(</span>b<span class="ansi-blue-fg">,</span> f<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    428</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>TypeError<span class="ansi-blue-fg">,</span> NotImplementedError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    429</span>                 <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> ignore_failures<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/blocks.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    671</span>             vals1d <span class="ansi-blue-fg">=</span> values<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    672</span>             <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 673</span><span class="ansi-red-fg">                 </span>values <span class="ansi-blue-fg">=</span> astype_nansafe<span class="ansi-blue-fg">(</span>vals1d<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    674</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>ValueError<span class="ansi-blue-fg">,</span> TypeError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    675</span>                 <span class="ansi-red-fg"># e.g. astype_nansafe can fail on object-dtype of strings</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/dtypes/cast.py</span> in <span class="ansi-cyan-fg">astype_nansafe</span><span class="ansi-blue-fg">(arr, dtype, copy, skipna)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1072</span>         <span class="ansi-red-fg"># work around NumPy brokenness, #1987</span>
+<span class="ansi-green-intense-fg ansi-bold">   1073</span>         <span class="ansi-green-fg">if</span> np<span class="ansi-blue-fg">.</span>issubdtype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">.</span>type<span class="ansi-blue-fg">,</span> np<span class="ansi-blue-fg">.</span>integer<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1074</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> lib<span class="ansi-blue-fg">.</span>astype_intsafe<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>reshape<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1075</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1076</span>         <span class="ansi-red-fg"># if we have a datetime/timedelta array of objects</span>
+
+<span class="ansi-green-fg">pandas/_libs/lib.pyx</span> in <span class="ansi-cyan-fg">pandas._libs.lib.astype_intsafe</span><span class="ansi-blue-fg">()</span>
+
+<span class="ansi-red-fg">ValueError</span>: invalid literal for int() with base 10: '2005-02-15'</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>But now we encounter the reason that this column ended up with an <code>object</code> data type rather than <code>int</code> or <code>float</code>. At least one of the values in the colum is written as a complete date: <code>2005-02-15</code> rather than just a year, so we get a <code>ValueError</code> when trying to convert it to an integer.</p>
+<h2 id="Which-values-can't-be-converted?">
+<a class="anchor" href="#Which-values-can't-be-converted?" aria-hidden="true"><span class="octicon octicon-link"></span></a>Which values can't be converted?<a class="anchor-link" href="#Which-values-can't-be-converted?"> </a>
+</h2>
+<p>So here's where it get annoying. Because Python crashes at the first value that it can't turn into an integer, we have no idea how many non-integer values are in the column. If it's just one out of half a million, then we can probably just delete that row and try again. But if we have lots of non-integer values, then that would be throwing away a lot of our data.</p>
+<p>Furthermore, if there are lots of non-integer values, are they all written in the same format? If it turns out that we have many values written in year-month-day format, just like the one we already found, then fixing them might be a simple string processing job. But if we have lots of different formats, then the task will be much trickier.</p>
+<p>Because we have nearly half a million values to check, obviously it's impossible to look at them all manually. So we will have to write a function to help us. The trick is to use <code>try/except</code> to prevent pandas from simply crashing out at the first invalid value. So here's the code:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">check_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Our function will take a single value, and attempt to convert it to an integer inside a <code>try</code> block. If the <code>int</code> call is sucessful - i.e. the value is a valid integer - then the function will return <code>np.NaN</code> to represent missing data. If the call to <code>int</code> causes a <code>ValueError</code> - i.e. the value that we passed in isn't a valid integer - then it will trigger the <code>except</code> block and return the value itself.</p>
+<p>To see how this works, let's try it on a few different inputs. Passing in a valid integer results in missing data:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">check_int</span><span class="p">(</span><span class="s1">'42'</span><span class="p">),</span> <span class="n">check_int</span><span class="p">(</span><span class="mf">1970.0</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>(nan, nan)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Whereas passing in anything that can't be converted to an integer results in the original value:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">check_int</span><span class="p">(</span><span class="s1">'banana'</span><span class="p">),</span> <span class="n">check_int</span><span class="p">(</span><span class="s1">'1970.0'</span><span class="p">),</span> <span class="n">check_int</span><span class="p">(</span><span class="s1">'2005-12-15'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>('banana', '1970.0', '2005-12-15')</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Notice a subtlety here in the handling of strings vs. floats: in Python calling <code>int</code> on a floating point number truncates it:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">int</span><span class="p">(</span><span class="mf">3.1415</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>3</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>whereas calling <code>int</code> on a string containing a floating point number causes an error:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">int</span><span class="p">(</span><span class="s1">'3.1415'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-15-388b05e53588&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>int<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">'3.1415'</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-red-fg">ValueError</span>: invalid literal for int() with base 10: '3.1415'</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So how does this function help us find our invalid values? If we use <code>apply</code> to call it on each value of the accession year column:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0         NaN
+1         NaN
+2         NaN
+3         NaN
+4         NaN
+         ... 
+474519    NaN
+474520    NaN
+474521    NaN
+474522    NaN
+474525    NaN
+Name: AccessionYear, Length: 470560, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We get back a series of the same length where values that were sucessfully converted to integers are missing, and invalid values are the same. So we can easily find all of the invalid values by dropping missing data:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>179190    2005-02-15
+390850    2020-03-23
+Name: AccessionYear, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here we have our answer: there are two values in this column that have been writted as complete dates.</p>
+<p>Now that we have the invalid values we can figure out how to fix them. In this case, because both invalid values have the same date format we can do this by splitting on <code>-</code> and taking the first element of the resulting list:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fixed_values</span> <span class="o">=</span> <span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'-'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">fixed_values</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>179190    2005
+390850    2020
+Name: AccessionYear, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Having fixed these two values, we can use the fixed values to update the original series:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fixed_values</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>/home/martin/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/IPython/core/interactiveshell.py:3418: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  exec(code_obj, self.user_global_ns, self.user_ns)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Which now allows us to convert the data type to integer:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0         1979
+1         1980
+2         1967
+3         1967
+4         1967
+          ... 
+474519    1964
+474520    1978
+474521    1907
+474522    1969
+474525    1961
+Name: AccessionYear, Length: 470560, dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>and carry out our filter:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span>
+    <span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1950</span>
+<span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Object Number</th>
+      <th>Is Highlight</th>
+      <th>...</th>
+      <th>Tags AAT URL</th>
+      <th>Tags Wikidata URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>14</th>
+      <td>16.74.49</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>16.74.27</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>16.74.28</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>16.74.29</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>16.74.30</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>474498</th>
+      <td>91.16.59</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>474499</th>
+      <td>93.13.6</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>474500</th>
+      <td>93.13.92</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300025943|http...</td>
+      <td>https://www.wikidata.org/wiki/Q467|https://www...</td>
+    </tr>
+    <tr>
+      <th>474504</th>
+      <td>13.225.13–.14, .16–.28</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300025928|http...</td>
+      <td>https://www.wikidata.org/wiki/Q8441|https://ww...</td>
+    </tr>
+    <tr>
+      <th>474521</th>
+      <td>07.225.14b</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300054534|http...</td>
+      <td>https://www.wikidata.org/wiki/Q333|https://www...</td>
+    </tr>
+  </tbody>
+</table>
+<p>202888 rows × 54 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>About 200,000 objects were acquired prior to 1950.</p>
+<h2 id="Dealing-with-many-invalid-values">
+<a class="anchor" href="#Dealing-with-many-invalid-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dealing with many invalid values<a class="anchor-link" href="#Dealing-with-many-invalid-values"> </a>
+</h2>
+<p>Let's try this technique on a more complicated column. Say that we want to find all objects that were acquired after the death of the artist. There's a column called Artist End Date that has values for about half of the rows:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0         1869      
+1         1844      
+9         1917      
+10        1844      
+11        1869      
+             ...    
+474492    2047      
+474503    1925      
+474512    1900      
+474519    1776      
+474522    1839      
+Name: Artist End Date, Length: 234232, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>From a glance at the values it looks like this is a series of year integers, but looking at the <code>dtype</code> tells us that it has ended up as type <code>object</code>. Sure enough, when we try to convert it to an integer type:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-34-77ad2746910f&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>met<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">'Artist End Date'</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>dropna<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>int<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/generic.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5870</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   5871</span>             <span class="ansi-red-fg"># else, only a single dtype is given</span>
+<span class="ansi-green-fg">-&gt; 5872</span><span class="ansi-red-fg">             </span>new_data <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_mgr<span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5873</span>             <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_constructor<span class="ansi-blue-fg">(</span>new_data<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__finalize__<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> method<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5874</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    629</span>         self<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">:</span> str <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">"raise"</span>
+<span class="ansi-green-intense-fg ansi-bold">    630</span>     ) -&gt; "BlockManager":
+<span class="ansi-green-fg">--&gt; 631</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    632</span> 
+<span class="ansi-green-intense-fg ansi-bold">    633</span>     def convert(
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">apply</span><span class="ansi-blue-fg">(self, f, align_keys, ignore_failures, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    425</span>                     applied <span class="ansi-blue-fg">=</span> b<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span>f<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    426</span>                 <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 427</span><span class="ansi-red-fg">                     </span>applied <span class="ansi-blue-fg">=</span> getattr<span class="ansi-blue-fg">(</span>b<span class="ansi-blue-fg">,</span> f<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    428</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>TypeError<span class="ansi-blue-fg">,</span> NotImplementedError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    429</span>                 <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> ignore_failures<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/blocks.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    671</span>             vals1d <span class="ansi-blue-fg">=</span> values<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    672</span>             <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 673</span><span class="ansi-red-fg">                 </span>values <span class="ansi-blue-fg">=</span> astype_nansafe<span class="ansi-blue-fg">(</span>vals1d<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    674</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>ValueError<span class="ansi-blue-fg">,</span> TypeError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    675</span>                 <span class="ansi-red-fg"># e.g. astype_nansafe can fail on object-dtype of strings</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/dtypes/cast.py</span> in <span class="ansi-cyan-fg">astype_nansafe</span><span class="ansi-blue-fg">(arr, dtype, copy, skipna)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1072</span>         <span class="ansi-red-fg"># work around NumPy brokenness, #1987</span>
+<span class="ansi-green-intense-fg ansi-bold">   1073</span>         <span class="ansi-green-fg">if</span> np<span class="ansi-blue-fg">.</span>issubdtype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">.</span>type<span class="ansi-blue-fg">,</span> np<span class="ansi-blue-fg">.</span>integer<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1074</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> lib<span class="ansi-blue-fg">.</span>astype_intsafe<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>reshape<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1075</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1076</span>         <span class="ansi-red-fg"># if we have a datetime/timedelta array of objects</span>
+
+<span class="ansi-green-fg">pandas/_libs/lib.pyx</span> in <span class="ansi-cyan-fg">pandas._libs.lib.astype_intsafe</span><span class="ansi-blue-fg">()</span>
+
+<span class="ansi-red-fg">ValueError</span>: invalid literal for int() with base 10: '1927      |9999      '</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>we can see that it has some invalid values. To keep things simple let's remove any rows with a missing artist end date:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span> <span class="o">=</span> <span class="n">met</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Then use our function to find the invalid values as before:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>34                              1927      |9999      
+111                             1933      |1902      
+112                             1933      |1902      
+203                             1933      |1902      
+204                             1933      |1902      
+                             ...                     
+474468                          1840      |1875      
+474469                          1840      |1875      
+474470                          1831      |1840      
+474472    1890      |1831      |1842      |1864      
+474473                          1900      |1842      
+Name: Artist End Date, Length: 69630, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here we have a much more complicated situation than the acession date. Where previously we had only two invalid values to worry about, now we have neary 70,000. However, since these values are in a pandas series, it's easy to summarize them using <code>value_counts</code>:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>1635      |1661                                           879
+1682      |1716                                           589
+1897      |1889                                           520
+9999      |9999                                           426
+1870      |1848      |1848                                379
+                                                         ... 
+1815      |1808      |1850      |1787                       1
+1641      |1713                                             1
+1780      |1699      |1766      |1695      |1789            1
+1868      |1879                                             1
+1917      |1660                                             1
+Name: Artist End Date, Length: 24693, dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The pattern is a bit tricky to see here. Let's just take the single most common invalid value:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>'1635      |1661      '</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It turns out to be the string <code>'1635      |1661      '</code>. This looks like it's structured data that has been taken from a table and accidentally included two values. Let's get the first row that has a non-integer value in the artist end date column (row 34):</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">34</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Object Number                                                        04.1a–c
+Is Highlight                                                            True
+Is Timeline Work                                                        True
+Is Public Domain                                                       False
+Object ID                                                                 35
+Gallery Number                                                           706
+Department                                                 The American Wing
+AccessionYear                                                         1904.0
+Object Name                                                             Vase
+Title                                                         The Adams Vase
+Culture                                                             American
+Period                                                                   NaN
+Dynasty                                                                  NaN
+Reign                                                                    NaN
+Portfolio                                                                NaN
+Constiuent ID                                                      108316253
+Artist Role                                            Designer|Manufacturer
+Artist Prefix                                    Designed by|Manufactured by
+Artist Display Name                           Paulding Farnham|Tiffany &amp; Co.
+Artist Display Bio                                    1859–1927|1837–present
+Artist Suffix                                                            NaN
+Artist Alpha Sort                            Farnham, Paulding|Tiffany &amp; Co.
+Artist Nationality                                                       NaN
+Artist Begin Date                                      1859      |1837      
+Artist End Date                                        1927      |9999      
+Artist Gender                                                              |
+Artist ULAN URL            http://vocab.getty.edu/page/ulan/500336597|htt...
+Artist Wikidata URL                                                        |
+Object Date                                                          1893–95
+Object Begin Date                                                       1893
+Object End Date                                                         1895
+Medium                     Gold, amethysts, spessartites, tourmalines, fr...
+Dimensions                 Overall: 19 7/16 x 13 x 9 1/4 in. (49.4 x 33 x...
+Credit Line                                    Gift of Edward D. Adams, 1904
+Geography Type                                                       Made in
+City                                                                New York
+State                                                                    NaN
+County                                                                   NaN
+Country                                                        United States
+Region                                                                   NaN
+Subregion                                                                NaN
+Locale                                                                   NaN
+Locus                                                                    NaN
+Excavation                                                               NaN
+River                                                                    NaN
+Classification                                                         Metal
+Rights and Reproduction                                                  NaN
+Link Resource              http://www.metmuseum.org/art/collection/search/35
+Object Wikidata URL                  https://www.wikidata.org/wiki/Q83545838
+Metadata Date                                                            NaN
+Repository                          Metropolitan Museum of Art, New York, NY
+Tags                                              Animals|Garlands|Birds|Men
+Tags AAT URL               http://vocab.getty.edu/page/aat/300249525|http...
+Tags Wikidata URL          https://www.wikidata.org/wiki/Q729|https://www...
+Name: 34, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we can see what's going on - take a look at the artist roles and dates:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">34</span><span class="p">][[</span><span class="s1">'Artist Role'</span><span class="p">,</span> <span class="s1">'Artist Display Name'</span><span class="p">,</span> <span class="s1">'Artist End Date'</span><span class="p">]]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Artist Role                     Designer|Manufacturer
+Artist Display Name    Paulding Farnham|Tiffany &amp; Co.
+Artist End Date                 1927      |9999      
+Name: 34, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This vase has two listed artists - the designer (Paulding Farnman) and the manufacturer (Tiffany &amp; Co.). The designer died in 1927, but the manufacturer is still around. These data nicely illustrate two common features of messy curated data - multiple pieces of data being forced into a single field, and the use of arbitrary values (in this case the date 9999) to represent special cases.</p>
+<p>How are we going to deal with these data? For this example, let's assume that for each object the most important contributor is listed first. So we will take our non-integer end dates:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>34                              1927      |9999      
+111                             1933      |1902      
+112                             1933      |1902      
+203                             1933      |1902      
+204                             1933      |1902      
+                             ...                     
+474468                          1840      |1875      
+474469                          1840      |1875      
+474470                          1831      |1840      
+474472    1890      |1831      |1842      |1864      
+474473                          1900      |1842      
+Name: Artist End Date, Length: 69630, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>and fix them by splitting on the tab character and taking the first element of the resulting string:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fixed_values</span> <span class="o">=</span> <span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'\|'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">fixed_values</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>34        1927      
+111       1933      
+112       1933      
+203       1933      
+204       1933      
+             ...    
+474468    1840      
+474469    1840      
+474470    1831      
+474472    1890      
+474473    1900      
+Name: Artist End Date, Length: 69630, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Just as before, we will update the series using these fixed values:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fixed_values</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we can try to change the series to an int:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-62-4702df368e1d&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>met<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">'Artist End Date'</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>int<span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/generic.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5870</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   5871</span>             <span class="ansi-red-fg"># else, only a single dtype is given</span>
+<span class="ansi-green-fg">-&gt; 5872</span><span class="ansi-red-fg">             </span>new_data <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_mgr<span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5873</span>             <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_constructor<span class="ansi-blue-fg">(</span>new_data<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__finalize__<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> method<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5874</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    629</span>         self<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">:</span> str <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">"raise"</span>
+<span class="ansi-green-intense-fg ansi-bold">    630</span>     ) -&gt; "BlockManager":
+<span class="ansi-green-fg">--&gt; 631</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    632</span> 
+<span class="ansi-green-intense-fg ansi-bold">    633</span>     def convert(
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">apply</span><span class="ansi-blue-fg">(self, f, align_keys, ignore_failures, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    425</span>                     applied <span class="ansi-blue-fg">=</span> b<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span>f<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    426</span>                 <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 427</span><span class="ansi-red-fg">                     </span>applied <span class="ansi-blue-fg">=</span> getattr<span class="ansi-blue-fg">(</span>b<span class="ansi-blue-fg">,</span> f<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    428</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>TypeError<span class="ansi-blue-fg">,</span> NotImplementedError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    429</span>                 <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> ignore_failures<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/blocks.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    671</span>             vals1d <span class="ansi-blue-fg">=</span> values<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    672</span>             <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 673</span><span class="ansi-red-fg">                 </span>values <span class="ansi-blue-fg">=</span> astype_nansafe<span class="ansi-blue-fg">(</span>vals1d<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    674</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>ValueError<span class="ansi-blue-fg">,</span> TypeError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    675</span>                 <span class="ansi-red-fg"># e.g. astype_nansafe can fail on object-dtype of strings</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/dtypes/cast.py</span> in <span class="ansi-cyan-fg">astype_nansafe</span><span class="ansi-blue-fg">(arr, dtype, copy, skipna)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1072</span>         <span class="ansi-red-fg"># work around NumPy brokenness, #1987</span>
+<span class="ansi-green-intense-fg ansi-bold">   1073</span>         <span class="ansi-green-fg">if</span> np<span class="ansi-blue-fg">.</span>issubdtype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">.</span>type<span class="ansi-blue-fg">,</span> np<span class="ansi-blue-fg">.</span>integer<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1074</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> lib<span class="ansi-blue-fg">.</span>astype_intsafe<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>reshape<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1075</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1076</span>         <span class="ansi-red-fg"># if we have a datetime/timedelta array of objects</span>
+
+<span class="ansi-green-fg">pandas/_libs/lib.pyx</span> in <span class="ansi-cyan-fg">pandas._libs.lib.astype_intsafe</span><span class="ansi-blue-fg">()</span>
+
+<span class="ansi-red-fg">ValueError</span>: invalid literal for int() with base 10: '2005-08-01'</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>But we get the same error as before! Just like with the accession date column, the artist end date column has some dates written in year-month-day format. We can find them with one more trip through our <code>check_int</code> function:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>65537     2005-08-01
+65632     1972-03-23
+65645     2004-09-28
+65675     2002-06-12
+65692     2004-09-28
+             ...    
+471268    1971-07-26
+471269    1988-11-15
+471270    1971-07-26
+472106    1971-07-26
+472186    2007-06-22
+Name: Artist End Date, Length: 1775, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Then fix them like we did before:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fixed_values</span> <span class="o">=</span> <span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_int</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'-'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">fixed_values</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>65537     2005
+65632     1972
+65645     2004
+65675     2002
+65692     2004
+          ... 
+471268    1971
+471269    1988
+471270    1971
+472106    1971
+472186    2007
+Name: Artist End Date, Length: 1775, dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>update the series once more:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fixed_values</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>and turn it into an integer:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span> <span class="o">=</span> <span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we can finally do our query: which objects were acquired after the death of the artist?</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">met</span><span class="p">[</span>
+    <span class="n">met</span><span class="p">[</span><span class="s1">'AccessionYear'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">met</span><span class="p">[</span><span class="s1">'Artist End Date'</span><span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Object Number</th>
+      <th>Is Highlight</th>
+      <th>...</th>
+      <th>Tags AAT URL</th>
+      <th>Tags Wikidata URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1979.486.1</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1980.264.5</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1979.486.3</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>1979.486.2</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>1979.486.7</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>474473</th>
+      <td>69.524.28</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300025943</td>
+      <td>https://www.wikidata.org/wiki/Q467</td>
+    </tr>
+    <tr>
+      <th>474503</th>
+      <td>TR.124.2020</td>
+      <td>False</td>
+      <td>...</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>474512</th>
+      <td>2002.233.25</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300164595</td>
+      <td>https://www.wikidata.org/wiki/Q335261</td>
+    </tr>
+    <tr>
+      <th>474519</th>
+      <td>64.101.433a, b</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300250047|http...</td>
+      <td>https://www.wikidata.org/wiki/Q3736439|https:/...</td>
+    </tr>
+    <tr>
+      <th>474522</th>
+      <td>69.292.12</td>
+      <td>False</td>
+      <td>...</td>
+      <td>http://vocab.getty.edu/page/aat/300250049|http...</td>
+      <td>https://www.wikidata.org/wiki/Q2092297|https:/...</td>
+    </tr>
+  </tbody>
+</table>
+<p>183125 rows × 54 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Extending-to-other-data-types">
+<a class="anchor" href="#Extending-to-other-data-types" aria-hidden="true"><span class="octicon octicon-link"></span></a>Extending to other data types<a class="anchor-link" href="#Extending-to-other-data-types"> </a>
+</h2>
+<p>We can use the same kind of helper function to find value that can't be converted to other data types. All we have to do is change the conversion code inside the function. So, for example, to find values that can't be converted to floats, we would write this:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">check_float</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>And then see how it works, remembering that <code>NaN</code> in the output indicates values that were converted without any problem:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">42</span><span class="p">,</span> <span class="mf">3.1415</span><span class="p">,</span> <span class="s1">'banana'</span><span class="p">])</span>
+<span class="n">test</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_float</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0       NaN
+1       NaN
+2    banana
+dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>With some pandas data types we have to be a bit careful. In particular, we need to remember that the nullable integer data type <code>Int64</code> (with an uppercase I) is more strict than the regular <code>int64</code>. In particular, <code>int64</code> will happily convert a floating point number to an integer by truncating it:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">3.1415</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'int64'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0    3
+dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>and will work with string representations of integers:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s1">'42'</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'int64'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0    42
+dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In contrast, <code>Int64</code> will raise an error when trying to convert either an integer represented as a string:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s1">'42'</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'Int64'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-122-5bf16a32e0d4&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>pd<span class="ansi-blue-fg">.</span>Series<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">'42'</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">'Int64'</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/generic.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5870</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   5871</span>             <span class="ansi-red-fg"># else, only a single dtype is given</span>
+<span class="ansi-green-fg">-&gt; 5872</span><span class="ansi-red-fg">             </span>new_data <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_mgr<span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5873</span>             <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_constructor<span class="ansi-blue-fg">(</span>new_data<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__finalize__<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> method<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5874</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    629</span>         self<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">:</span> str <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">"raise"</span>
+<span class="ansi-green-intense-fg ansi-bold">    630</span>     ) -&gt; "BlockManager":
+<span class="ansi-green-fg">--&gt; 631</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    632</span> 
+<span class="ansi-green-intense-fg ansi-bold">    633</span>     def convert(
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">apply</span><span class="ansi-blue-fg">(self, f, align_keys, ignore_failures, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    425</span>                     applied <span class="ansi-blue-fg">=</span> b<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span>f<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    426</span>                 <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 427</span><span class="ansi-red-fg">                     </span>applied <span class="ansi-blue-fg">=</span> getattr<span class="ansi-blue-fg">(</span>b<span class="ansi-blue-fg">,</span> f<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    428</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>TypeError<span class="ansi-blue-fg">,</span> NotImplementedError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    429</span>                 <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> ignore_failures<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/blocks.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    671</span>             vals1d <span class="ansi-blue-fg">=</span> values<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    672</span>             <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 673</span><span class="ansi-red-fg">                 </span>values <span class="ansi-blue-fg">=</span> astype_nansafe<span class="ansi-blue-fg">(</span>vals1d<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    674</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>ValueError<span class="ansi-blue-fg">,</span> TypeError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    675</span>                 <span class="ansi-red-fg"># e.g. astype_nansafe can fail on object-dtype of strings</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/dtypes/cast.py</span> in <span class="ansi-cyan-fg">astype_nansafe</span><span class="ansi-blue-fg">(arr, dtype, copy, skipna)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1017</span>     <span class="ansi-red-fg"># dispatch on extension dtype if needed</span>
+<span class="ansi-green-intense-fg ansi-bold">   1018</span>     <span class="ansi-green-fg">if</span> is_extension_array_dtype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1019</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> dtype<span class="ansi-blue-fg">.</span>construct_array_type<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>_from_sequence<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1020</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1021</span>     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> isinstance<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">,</span> np<span class="ansi-blue-fg">.</span>dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">_from_sequence</span><span class="ansi-blue-fg">(cls, scalars, dtype, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    361</span>         cls<span class="ansi-blue-fg">,</span> scalars<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">*</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span>
+<span class="ansi-green-intense-fg ansi-bold">    362</span>     ) -&gt; "IntegerArray":
+<span class="ansi-green-fg">--&gt; 363</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> integer_array<span class="ansi-blue-fg">(</span>scalars<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    364</span> 
+<span class="ansi-green-intense-fg ansi-bold">    365</span>     <span class="ansi-blue-fg">@</span>classmethod
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">integer_array</span><span class="ansi-blue-fg">(values, dtype, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    141</span>     TypeError <span class="ansi-green-fg">if</span> incompatible types
+<span class="ansi-green-intense-fg ansi-bold">    142</span>     """
+<span class="ansi-green-fg">--&gt; 143</span><span class="ansi-red-fg">     </span>values<span class="ansi-blue-fg">,</span> mask <span class="ansi-blue-fg">=</span> coerce_to_array<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    144</span>     <span class="ansi-green-fg">return</span> IntegerArray<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">,</span> mask<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    145</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">coerce_to_array</span><span class="ansi-blue-fg">(values, dtype, mask, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    225</span>             <span class="ansi-blue-fg">"mixed-integer-float"</span><span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    226</span>         ]:
+<span class="ansi-green-fg">--&gt; 227</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">raise</span> TypeError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">f"{values.dtype} cannot be converted to an IntegerDtype"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    228</span> 
+<span class="ansi-green-intense-fg ansi-bold">    229</span>     <span class="ansi-green-fg">elif</span> is_bool_dtype<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> is_integer_dtype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">TypeError</span>: object cannot be converted to an IntegerDtype</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>or when trying to convert a floating point number:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">3.1415</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'Int64'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">safe_cast</span><span class="ansi-blue-fg">(values, dtype, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    154</span>     <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 155</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> values<span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">,</span> casting<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">"safe"</span><span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    156</span>     <span class="ansi-green-fg">except</span> TypeError <span class="ansi-green-fg">as</span> err<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">TypeError</span>: Cannot cast array data from dtype('float64') to dtype('int64') according to the rule 'safe'
+
+The above exception was the direct cause of the following exception:
+
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-123-3ee8009491ea&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>pd<span class="ansi-blue-fg">.</span>Series<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">3.1415</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">'Int64'</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/generic.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5870</span>         <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   5871</span>             <span class="ansi-red-fg"># else, only a single dtype is given</span>
+<span class="ansi-green-fg">-&gt; 5872</span><span class="ansi-red-fg">             </span>new_data <span class="ansi-blue-fg">=</span> self<span class="ansi-blue-fg">.</span>_mgr<span class="ansi-blue-fg">.</span>astype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5873</span>             <span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>_constructor<span class="ansi-blue-fg">(</span>new_data<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>__finalize__<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">,</span> method<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   5874</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    629</span>         self<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span><span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">:</span> str <span class="ansi-blue-fg">=</span> <span class="ansi-blue-fg">"raise"</span>
+<span class="ansi-green-intense-fg ansi-bold">    630</span>     ) -&gt; "BlockManager":
+<span class="ansi-green-fg">--&gt; 631</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> self<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">"astype"</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">,</span> errors<span class="ansi-blue-fg">=</span>errors<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    632</span> 
+<span class="ansi-green-intense-fg ansi-bold">    633</span>     def convert(
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/managers.py</span> in <span class="ansi-cyan-fg">apply</span><span class="ansi-blue-fg">(self, f, align_keys, ignore_failures, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">    425</span>                     applied <span class="ansi-blue-fg">=</span> b<span class="ansi-blue-fg">.</span>apply<span class="ansi-blue-fg">(</span>f<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    426</span>                 <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 427</span><span class="ansi-red-fg">                     </span>applied <span class="ansi-blue-fg">=</span> getattr<span class="ansi-blue-fg">(</span>b<span class="ansi-blue-fg">,</span> f<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    428</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>TypeError<span class="ansi-blue-fg">,</span> NotImplementedError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    429</span>                 <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> ignore_failures<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/internals/blocks.py</span> in <span class="ansi-cyan-fg">astype</span><span class="ansi-blue-fg">(self, dtype, copy, errors)</span>
+<span class="ansi-green-intense-fg ansi-bold">    671</span>             vals1d <span class="ansi-blue-fg">=</span> values<span class="ansi-blue-fg">.</span>ravel<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    672</span>             <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 673</span><span class="ansi-red-fg">                 </span>values <span class="ansi-blue-fg">=</span> astype_nansafe<span class="ansi-blue-fg">(</span>vals1d<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    674</span>             <span class="ansi-green-fg">except</span> <span class="ansi-blue-fg">(</span>ValueError<span class="ansi-blue-fg">,</span> TypeError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    675</span>                 <span class="ansi-red-fg"># e.g. astype_nansafe can fail on object-dtype of strings</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/dtypes/cast.py</span> in <span class="ansi-cyan-fg">astype_nansafe</span><span class="ansi-blue-fg">(arr, dtype, copy, skipna)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1017</span>     <span class="ansi-red-fg"># dispatch on extension dtype if needed</span>
+<span class="ansi-green-intense-fg ansi-bold">   1018</span>     <span class="ansi-green-fg">if</span> is_extension_array_dtype<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1019</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> dtype<span class="ansi-blue-fg">.</span>construct_array_type<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>_from_sequence<span class="ansi-blue-fg">(</span>arr<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1020</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1021</span>     <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> isinstance<span class="ansi-blue-fg">(</span>dtype<span class="ansi-blue-fg">,</span> np<span class="ansi-blue-fg">.</span>dtype<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">_from_sequence</span><span class="ansi-blue-fg">(cls, scalars, dtype, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    361</span>         cls<span class="ansi-blue-fg">,</span> scalars<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">*</span><span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">None</span><span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">:</span> bool <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span>
+<span class="ansi-green-intense-fg ansi-bold">    362</span>     ) -&gt; "IntegerArray":
+<span class="ansi-green-fg">--&gt; 363</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">return</span> integer_array<span class="ansi-blue-fg">(</span>scalars<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    364</span> 
+<span class="ansi-green-intense-fg ansi-bold">    365</span>     <span class="ansi-blue-fg">@</span>classmethod
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">integer_array</span><span class="ansi-blue-fg">(values, dtype, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    141</span>     TypeError <span class="ansi-green-fg">if</span> incompatible types
+<span class="ansi-green-intense-fg ansi-bold">    142</span>     """
+<span class="ansi-green-fg">--&gt; 143</span><span class="ansi-red-fg">     </span>values<span class="ansi-blue-fg">,</span> mask <span class="ansi-blue-fg">=</span> coerce_to_array<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">=</span>dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span>copy<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    144</span>     <span class="ansi-green-fg">return</span> IntegerArray<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">,</span> mask<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    145</span> 
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">coerce_to_array</span><span class="ansi-blue-fg">(values, dtype, mask, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    258</span>         values <span class="ansi-blue-fg">=</span> safe_cast<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">False</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    259</span>     <span class="ansi-green-fg">else</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 260</span><span class="ansi-red-fg">         </span>values <span class="ansi-blue-fg">=</span> safe_cast<span class="ansi-blue-fg">(</span>values<span class="ansi-blue-fg">,</span> dtype<span class="ansi-blue-fg">,</span> copy<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">False</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    261</span> 
+<span class="ansi-green-intense-fg ansi-bold">    262</span>     <span class="ansi-green-fg">return</span> values<span class="ansi-blue-fg">,</span> mask
+
+<span class="ansi-green-fg">~/.virtualenvs/drawingfromdata/lib/python3.8/site-packages/pandas/core/arrays/integer.py</span> in <span class="ansi-cyan-fg">safe_cast</span><span class="ansi-blue-fg">(values, dtype, copy)</span>
+<span class="ansi-green-intense-fg ansi-bold">    160</span>             <span class="ansi-green-fg">return</span> casted
+<span class="ansi-green-intense-fg ansi-bold">    161</span> 
+<span class="ansi-green-fg">--&gt; 162</span><span class="ansi-red-fg">         raise TypeError(
+</span><span class="ansi-green-intense-fg ansi-bold">    163</span>             <span class="ansi-blue-fg">f"cannot safely cast non-equivalent {values.dtype} to {np.dtype(dtype)}"</span>
+<span class="ansi-green-intense-fg ansi-bold">    164</span>         ) from err
+
+<span class="ansi-red-fg">TypeError</span>: cannot safely cast non-equivalent float64 to int64</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So if we want to write a function that will identify values that can't be changed to <code>Int64</code>, we have to construct a series inside the <code>try</code> block and force the <code>Int64</code> dtype:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">check_nullable_int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">value</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'Int64'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Testing it shows the behaviour:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">42</span><span class="p">,</span> <span class="s1">'42'</span><span class="p">,</span> <span class="mf">3.1415</span><span class="p">,</span> <span class="s1">'3.1415'</span><span class="p">,</span> <span class="s1">'banana'</span><span class="p">])</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">check_nullable_int</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0         NaN
+1          42
+2    3.141500
+3      3.1415
+4      banana
+dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Unsurprisingly, this approach is much slower:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">%</span><span class="k">timeit</span> met['Artist End Date'].apply(check_int)
+<span class="o">%</span><span class="k">timeit</span> met['Artist End Date'].apply(check_nullable_int)
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>45.1 ms ± 452 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+17.7 s ± 184 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So for simple cases we should probably use the <code>int</code> and <code>float</code> functions.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Conclusion">
+<a class="anchor" href="#Conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion<a class="anchor-link" href="#Conclusion"> </a>
+</h2>
+<p>This type of messy data, where we have multiple different representations in the same column, occurs very frequently in real world manually curated datasets. Writing a small helper function like our <code>check_int</code> can make it much easier to find the values that are causing problems, and figure out how to fix them. We need to watch out for slight differences between data types.</p>
+<p>If you've made it this far, you should definitely subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a>, <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>, or buy the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>!</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><a class="u-url" href="/pandas/dtypes/2021/01/05/finding-invalid-values-in-numerical-columns.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Data exploration and visualization with Python, pandas, seaborn and matplotlib</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
