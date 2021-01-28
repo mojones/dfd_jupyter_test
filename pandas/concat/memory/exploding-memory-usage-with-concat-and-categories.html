@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Why does my memory usage explode when concatenating dataframes? | Drawing from Data</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Why does my memory usage explode when concatenating dataframes?" />
+<meta name="author" content="Martin" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Storing string columns as categories can result in massive memory savings when working with large dataframes. However, those savings can surprisingly disappear when we start concatenating dataframes." />
+<meta property="og:description" content="Storing string columns as categories can result in massive memory savings when working with large dataframes. However, those savings can surprisingly disappear when we start concatenating dataframes." />
+<link rel="canonical" href="https://drawingfromdata.com/pandas/concat/memory/exploding-memory-usage-with-concat-and-categories.html" />
+<meta property="og:url" content="https://drawingfromdata.com/pandas/concat/memory/exploding-memory-usage-with-concat-and-categories.html" />
+<meta property="og:site_name" content="Drawing from Data" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-27T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://drawingfromdata.com/pandas/concat/memory/exploding-memory-usage-with-concat-and-categories.html","@type":"BlogPosting","headline":"Why does my memory usage explode when concatenating dataframes?","dateModified":"2021-01-27T00:00:00-06:00","datePublished":"2021-01-27T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://drawingfromdata.com/pandas/concat/memory/exploding-memory-usage-with-concat-and-categories.html"},"author":{"@type":"Person","name":"Martin"},"description":"Storing string columns as categories can result in massive memory savings when working with large dataframes. However, those savings can surprisingly disappear when we start concatenating dataframes.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://drawingfromdata.com/feed.xml" title="Drawing from Data" /><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+<script async defer src="https://san.drawingfromdata.com/latest.js"></script>
+  <noscript><img src="https://san.drawingfromdata.com/noscript.gif" alt=""/></noscript>
+  
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Drawing from Data</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About Me</a><a class="page-link" href="/newsletter/">Newsletter</a><a class="page-link" href="/search/">Search</a><a class="page-link" href="/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Why does my memory usage explode when concatenating dataframes?</h1><p class="page-description">Storing string columns as categories can result in massive memory savings when working with large dataframes. However, those savings can surprisingly disappear when we start concatenating dataframes.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-27T00:00:00-06:00" itemprop="datePublished">
+        Jan 27, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Martin</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      10 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/categories/#pandas">pandas</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#concat">concat</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#memory">memory</a>
+        
+      
+      </p>
+    
+
+    
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#Introduction">Introduction </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Saving-memory-on-a-single-data-file">Saving memory on a single data file </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Concatenating-multiple-data-files">Concatenating multiple data files </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Concatenation-and-chunking">Concatenation and chunking </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Fixing-the-problem">Fixing the problem </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/exploding memory usage with concat and categories.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>tldr: concatenating categorical <code>Series</code> with nonidentical categories gives an <code>object</code> dtype in the result, with severe memory implications.</p>
+<h2 id="Introduction">
+<a class="anchor" href="#Introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction<a class="anchor-link" href="#Introduction"> </a>
+</h2>
+<p>In a library as large and featureful as pandas, there are bound to be surprising behaviours. In this article we will take a look at a memory issue that I've run into multiple times in real life datasets - an unexpected increase in memory usage when concatenating multiple dataframes.</p>
+<p>As always, to keep this article to a reasonable size we won't be going in to too much detail on the methods involved. All of the methods we'll use here are covered in detail in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>. In particular, check out chapter 2 for a discussion of data types and chapter 16 for a discussion of the memory implications.</p>
+<p>If you're interested in more articles and tips on data exploration with Python, you should subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a> or <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>.</p>
+<h3 id="Saving-memory-on-a-single-data-file">
+<a class="anchor" href="#Saving-memory-on-a-single-data-file" aria-hidden="true"><span class="octicon octicon-link"></span></a>Saving memory on a single data file<a class="anchor-link" href="#Saving-memory-on-a-single-data-file"> </a>
+</h3>
+<p>As an example, we'll be using a slightly modified version of this car accident dataset:</p>
+<p><a href="https://www.kaggle.com/sobhanmoosavi/us-accidents">https://www.kaggle.com/sobhanmoosavi/us-accidents</a></p>
+<p>This dataset contains records of car accidents in the USA, and for the purposes of this story we have one file per month. Our goal is to combine all of these to make one large dataframe that we can use for analysis. Let's load up the first file to see the structure:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="c1"># load just the data for January</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'January_car_accidents.csv'</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>City</th>
+      <th>State</th>
+      <th>month</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>El Cerrito</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Berkeley</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Oakley</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Richmond</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>El Cerrito</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>301919</th>
+      <td>Sun Valley</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>301920</th>
+      <td>Costa Mesa</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>301921</th>
+      <td>Costa Mesa</td>
+      <td>CA</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>301922</th>
+      <td>Madras</td>
+      <td>OR</td>
+      <td>January</td>
+    </tr>
+    <tr>
+      <th>301923</th>
+      <td>Jordan Valley</td>
+      <td>OR</td>
+      <td>January</td>
+    </tr>
+  </tbody>
+</table>
+<p>301924 rows × 3 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is pretty straightforward - we have columns for City, State and Month, and around 300,000 rows. Each row represents a single car accident. In the original dataset, of course, there are many more columns. For this article we are interested in the State column.</p>
+<p>Let's assume that because this is a large dataset, we're worried about running out of memory. We know that for columns with a small number of values, storing them as a categorical data type can save a lot of memory (see chapter 16 in the <a href="drawingfromdata.com/book">Drawing from Data book</a> for a full discussion of memory issues). Let's check how much memory the State column uses when stored as <code>object</code>. Because <code>memory_usage</code> returns the result in bytes, we'll divide by 1e6 to get an answer in megabytes:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>17.813644</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now the same column as a category:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'category'</span><span class="p">)</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0.305956</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As expected, a considerable saving. Once we've figured this out, it's probably a good habit to specify a categorical data types when reading in the file:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'January_car_accidents.csv'</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">'State'</span> <span class="p">:</span> <span class="s1">'category'</span><span class="p">})</span>
+<span class="n">df</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Index     0.000128
+City     19.861495
+State     0.305828
+month    19.323136
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Incidentally, the City and month columns would also be better stored as categories, but we will ignore that for now.</p>
+<h2 id="Concatenating-multiple-data-files">
+<a class="anchor" href="#Concatenating-multiple-data-files" aria-hidden="true"><span class="octicon octicon-link"></span></a>Concatenating multiple data files<a class="anchor-link" href="#Concatenating-multiple-data-files"> </a>
+</h2>
+<p>Let's now make a loop to read all 12 data files, and check the memory usage for each, remembering to keep the 'category' dtype:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">glob</span>
+
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*car_accidents.csv'</span><span class="p">):</span>
+    <span class="n">month_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'State'</span> <span class="p">:</span> <span class="s1">'category'</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">month_df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>March_car_accidents.csv 0.29748
+April_car_accidents.csv 0.30353
+September_car_accidents.csv 0.296511
+February_car_accidents.csv 0.288488
+May_car_accidents.csv 0.300636
+January_car_accidents.csv 0.305956
+July_car_accidents.csv 0.227059
+June_car_accidents.csv 0.314354
+November_car_accidents.csv 0.303147
+December_car_accidents.csv 0.303714
+October_car_accidents.csv 0.328636
+August_car_accidents.csv 0.293021
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Obviously the exact numbers differ, but each of our single-month data files takes around 0.3 Mb for the State column. Our estimate for the memory usage of the State column in our combined dataframe, therefore, is 0.3 * 12: around 3.6 Mb.</p>
+<p>The best way to combine these data files is to make a list of dataframes then concatenate them at the end:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">all_dfs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*car_accidents.csv'</span><span class="p">):</span>
+    <span class="n">month_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'State'</span> <span class="p">:</span> <span class="s1">'category'</span><span class="p">})</span>
+    <span class="n">all_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">month_df</span><span class="p">)</span>
+    
+<span class="n">big_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_dfs</span><span class="p">)</span>
+<span class="n">big_df</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>City</th>
+      <th>State</th>
+      <th>month</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Columbus</td>
+      <td>OH</td>
+      <td>March</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Miamisburg</td>
+      <td>OH</td>
+      <td>March</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Dayton</td>
+      <td>OH</td>
+      <td>March</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Columbus</td>
+      <td>OH</td>
+      <td>March</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Columbus</td>
+      <td>OH</td>
+      <td>March</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>288925</th>
+      <td>Riverside</td>
+      <td>CA</td>
+      <td>August</td>
+    </tr>
+    <tr>
+      <th>288926</th>
+      <td>San Diego</td>
+      <td>CA</td>
+      <td>August</td>
+    </tr>
+    <tr>
+      <th>288927</th>
+      <td>Orange</td>
+      <td>CA</td>
+      <td>August</td>
+    </tr>
+    <tr>
+      <th>288928</th>
+      <td>Culver City</td>
+      <td>CA</td>
+      <td>August</td>
+    </tr>
+    <tr>
+      <th>288929</th>
+      <td>Highland</td>
+      <td>CA</td>
+      <td>August</td>
+    </tr>
+  </tbody>
+</table>
+<p>3513617 rows × 3 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>All looks fine here: for our combined dataset we have around 3.5 million rows. But take a look at the memory usage:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">big_df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>235.412339</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Far from taking up less than 4 Mb as expected, our State column is taking up more than 200 Mb. What has happened? The clue is in the data type:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">big_df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>&lt;class 'pandas.core.frame.DataFrame'&gt;
+Int64Index: 3513617 entries, 0 to 288929
+Data columns (total 3 columns):
+ #   Column  Dtype 
+---  ------  ----- 
+ 0   City    object
+ 1   State   object
+ 2   month   object
+dtypes: object(3)
+memory usage: 107.2+ MB
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We have lost our categorical type; the State colum in the big dataframe has been turned back into <code>object</code>. The reason: <strong>not every state is present in every single-month data file</strong>:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">big_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'month'</span><span class="p">)[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>month
+April        48
+August       49
+December     49
+February     49
+January      48
+July         49
+June         48
+March        49
+May          49
+November     49
+October      49
+September    49
+Name: State, dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Most months have records for 49 states, but a few have records for only 48. We can find the missing states quite easily with a mixture of pandas and Python's built in set type:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">april</span> <span class="o">=</span> <span class="n">big_df</span><span class="p">[</span><span class="n">big_df</span><span class="p">[</span><span class="s1">'month'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'April'</span><span class="p">]</span>
+<span class="n">august</span> <span class="o">=</span> <span class="n">big_df</span><span class="p">[</span><span class="n">big_df</span><span class="p">[</span><span class="s1">'month'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'August'</span><span class="p">]</span>
+
+<span class="c1"># which state has records for August but not April</span>
+<span class="nb">set</span><span class="p">(</span><span class="n">august</span><span class="p">[</span><span class="s1">'State'</span><span class="p">])</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">april</span><span class="p">[</span><span class="s1">'State'</span><span class="p">])</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{'ND'}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The missing states mean that the categories are slightly different between the individual month dataframes, and when we ask pandas to concatenate categorical datasets with different categories, it sets the data type back to <code>object</code>. We can see this behaviour with a simple example:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cat_series_one</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s1">'apple'</span><span class="p">,</span> <span class="s1">'banana'</span><span class="p">,</span> <span class="s1">'orange'</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'category'</span><span class="p">)</span>
+<span class="n">cat_series_two</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s1">'apple'</span><span class="p">,</span> <span class="s1">'banana'</span><span class="p">,</span> <span class="s1">'banana'</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'category'</span><span class="p">)</span>
+
+<span class="n">combined_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">cat_series_one</span><span class="p">,</span> <span class="n">cat_series_two</span><span class="p">])</span>
+
+<span class="c1"># look at the dtype for the combined series</span>
+<span class="n">combined_series</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0     apple
+1    banana
+2    orange
+0     apple
+1    banana
+2    banana
+dtype: object</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We will encounter this problem any time we use <code>pd.concat</code> on categorical columns where the categories are not exactly identical. One such scenario is the one we've just looked at: when we need to combine multiple data files.</p>
+<h3 id="Concatenation-and-chunking">
+<a class="anchor" href="#Concatenation-and-chunking" aria-hidden="true"><span class="octicon octicon-link"></span></a>Concatenation and chunking<a class="anchor-link" href="#Concatenation-and-chunking"> </a>
+</h3>
+<p>Another is when we use chunking to read a data file one piece at a time. The canonical way to read a large CSV file in chunks is to append the chunks to a list then use <code>pd.concat</code> on the list:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">all_dfs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># process 100,000 rows at a time</span>
+<span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'January_car_accidents.csv'</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">{</span><span class="s1">'State'</span> <span class="p">:</span> <span class="s1">'category'</span><span class="p">},</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">100000</span><span class="p">):</span>
+    <span class="c1"># possibly do some processing on chunk</span>
+    <span class="n">all_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+    
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_dfs</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 301924 entries, 0 to 301923
+Data columns (total 3 columns):
+ #   Column  Non-Null Count   Dtype 
+---  ------  --------------   ----- 
+ 0   City    301914 non-null  object
+ 1   State   301924 non-null  object
+ 2   month   301924 non-null  object
+dtypes: object(3)
+memory usage: 6.9+ MB
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here we run into the same issue. Although we have specified a categorical data type for the State column for each chunk, when we combine them the State column gets turned back into an <code>object</code>, since each chunk has a slightly different set of unique states in it.</p>
+<p>This version of the problem is especially harsh, as the most common reason for chunking input files in the first place is to reduce peak memory usage! So it's an especially nasty surprise when the memory usage of the State column turns out to be so much higher than our estimate.</p>
+<h2 id="Fixing-the-problem">
+<a class="anchor" href="#Fixing-the-problem" aria-hidden="true"><span class="octicon octicon-link"></span></a>Fixing the problem<a class="anchor-link" href="#Fixing-the-problem"> </a>
+</h2>
+<p>We can get round this problem in a number of ways. If we have enough memory, we can simply take our combined dataframe and change the State column to a category after it's been assembled:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">big_df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span> <span class="o">=</span> <span class="n">big_df</span><span class="p">[</span><span class="s1">'State'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'category'</span><span class="p">)</span>
+<span class="n">big_df</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Index     28.108936
+City     231.140089
+State      3.517580
+month    222.078650
+dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>That gets the State column memory usage back down to our estimate of around 3.5 Mb.</p>
+<p>If we haven't got enough memory to do this, we have to force all the single-month dataframe State columns to have identical categories. We can do this by explicitly creating a categorical data type and listing the categories that we want:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">CategoricalDtype</span>
+
+<span class="c1"># just a list of Python strings</span>
+<span class="n">states</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"AL"</span><span class="p">,</span> <span class="s2">"AK"</span><span class="p">,</span> <span class="s2">"AZ"</span><span class="p">,</span> <span class="s2">"AR"</span><span class="p">,</span> <span class="s2">"CA"</span><span class="p">,</span> <span class="s2">"CO"</span><span class="p">,</span> <span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"DC"</span><span class="p">,</span> <span class="s2">"DE"</span><span class="p">,</span> <span class="s2">"FL"</span><span class="p">,</span> <span class="s2">"GA"</span><span class="p">,</span> 
+          <span class="s2">"HI"</span><span class="p">,</span> <span class="s2">"ID"</span><span class="p">,</span> <span class="s2">"IL"</span><span class="p">,</span> <span class="s2">"IN"</span><span class="p">,</span> <span class="s2">"IA"</span><span class="p">,</span> <span class="s2">"KS"</span><span class="p">,</span> <span class="s2">"KY"</span><span class="p">,</span> <span class="s2">"LA"</span><span class="p">,</span> <span class="s2">"ME"</span><span class="p">,</span> <span class="s2">"MD"</span><span class="p">,</span> 
+          <span class="s2">"MA"</span><span class="p">,</span> <span class="s2">"MI"</span><span class="p">,</span> <span class="s2">"MN"</span><span class="p">,</span> <span class="s2">"MS"</span><span class="p">,</span> <span class="s2">"MO"</span><span class="p">,</span> <span class="s2">"MT"</span><span class="p">,</span> <span class="s2">"NE"</span><span class="p">,</span> <span class="s2">"NV"</span><span class="p">,</span> <span class="s2">"NH"</span><span class="p">,</span> <span class="s2">"NJ"</span><span class="p">,</span> 
+          <span class="s2">"NM"</span><span class="p">,</span> <span class="s2">"NY"</span><span class="p">,</span> <span class="s2">"NC"</span><span class="p">,</span> <span class="s2">"ND"</span><span class="p">,</span> <span class="s2">"OH"</span><span class="p">,</span> <span class="s2">"OK"</span><span class="p">,</span> <span class="s2">"OR"</span><span class="p">,</span> <span class="s2">"PA"</span><span class="p">,</span> <span class="s2">"RI"</span><span class="p">,</span> <span class="s2">"SC"</span><span class="p">,</span> 
+          <span class="s2">"SD"</span><span class="p">,</span> <span class="s2">"TN"</span><span class="p">,</span> <span class="s2">"TX"</span><span class="p">,</span> <span class="s2">"UT"</span><span class="p">,</span> <span class="s2">"VT"</span><span class="p">,</span> <span class="s2">"VA"</span><span class="p">,</span> <span class="s2">"WA"</span><span class="p">,</span> <span class="s2">"WV"</span><span class="p">,</span> <span class="s2">"WI"</span><span class="p">,</span> <span class="s2">"WY"</span><span class="p">]</span>
+
+<span class="n">state_type</span> <span class="o">=</span> <span class="n">CategoricalDtype</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="n">states</span><span class="p">)</span>
+<span class="n">state_type</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>CategoricalDtype(categories=['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL',
+                  'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
+                  'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH',
+                  'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
+                  'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI',
+                  'WY'],
+, ordered=False)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now when we create a series with this type, it will always have all the states as its categories regardless of which states are actually in the data:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s1">'KS'</span><span class="p">,</span> <span class="s1">'TX'</span><span class="p">,</span> <span class="s1">'VT'</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">state_type</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0    KS
+1    TX
+2    VT
+dtype: category
+Categories (51, object): ['AL', 'AK', 'AZ', 'AR', ..., 'WA', 'WV', 'WI', 'WY']</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Notice that the above series has all 51 states in its categories even though there are only 3 in the data.</p>
+<p>Using this new type in our input loop results in the categorical data type being preserved after concatenation:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">all_dfs</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*car_accidents.csv'</span><span class="p">):</span>
+    <span class="n">month_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'State'</span> <span class="p">:</span> <span class="n">state_type</span><span class="p">})</span>
+    <span class="n">all_dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">month_df</span><span class="p">)</span>
+    
+<span class="n">big_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">all_dfs</span><span class="p">)</span>
+<span class="n">big_df</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>&lt;class 'pandas.core.frame.DataFrame'&gt;
+Int64Index: 3513617 entries, 0 to 288929
+Data columns (total 3 columns):
+ #   Column  Dtype   
+---  ------  -----   
+ 0   City    object  
+ 1   State   category
+ 2   month   object  
+dtypes: category(1), object(2)
+memory usage: 83.8+ MB
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In this case I've just copied an existing Python <a href="https://gist.github.com/JeffPaine/3083347">list of state abbreviations that I found online</a>. In other situations it might be possible to generate the list by reading all the input files one line at a time:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">all_states</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*car_accidents.csv'</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">','</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">all_states</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+<span class="c1"># remove the column name</span>
+<span class="n">all_states</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">'State'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">all_states</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>{'WY', 'NY', 'MS', 'IL', 'NJ', 'MA', 'DC', 'DE', 'UT', 'WA', 'OK', 'RI', 'CO', 'IN', 'TX', 'AZ', 'WI', 'TN', 'FL', 'IA', 'SC', 'ME', 'ND', 'NC', 'MD', 'SD', 'NE', 'KS', 'PA', 'GA', 'OR', 'MT', 'KY', 'NH', 'ID', 'MN', 'OH', 'VA', 'MI', 'NM', 'CT', 'CA', 'MO', 'AL', 'WV', 'AR', 'NV', 'LA', 'VT'}
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Although this takes a while to run, it's very memory-friendly as we only have to store a single row of each input file in memory at a time.</p>
+<p>If you've made it this far, you should definitely subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a>, <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>, or buy the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>!</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><a class="u-url" href="/pandas/concat/memory/exploding-memory-usage-with-concat-and-categories.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Data exploration and visualization with Python, pandas, seaborn and matplotlib</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
