@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Making a difficult data analysis question easy | Drawing from Data</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Making a difficult data analysis question easy" />
+<meta name="author" content="Martin" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping." />
+<meta property="og:description" content="A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping." />
+<link rel="canonical" href="https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html" />
+<meta property="og:url" content="https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html" />
+<meta property="og:site_name" content="Drawing from Data" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-02-10T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html","@type":"BlogPosting","headline":"Making a difficult data analysis question easy","dateModified":"2021-02-10T00:00:00-06:00","datePublished":"2021-02-10T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html"},"author":{"@type":"Person","name":"Martin"},"description":"A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://drawingfromdata.com/feed.xml" title="Drawing from Data" /><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+<script async defer src="https://san.drawingfromdata.com/latest.js"></script>
+  <noscript><img src="https://san.drawingfromdata.com/noscript.gif" alt=""/></noscript>
+  
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Drawing from Data</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About Me</a><a class="page-link" href="/newsletter/">Newsletter</a><a class="page-link" href="/search/">Search</a><a class="page-link" href="/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Making a difficult data analysis question easy</h1><p class="page-description">A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-02-10T00:00:00-06:00" itemprop="datePublished">
+        Feb 10, 2021
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Martin</span></span>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      16 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/categories/#pandas">pandas</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/categories/#reshaping">reshaping</a>
+        
+      
+      </p>
+    
+
+    
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h1"><a href="#Introduction">Introduction </a></li>
+<li class="toc-entry toc-h1"><a href="#Taking-a-look-at-the-dataset">Taking a look at the dataset </a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#The-challenge">The challenge </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Option-one:-working-with-the-data-in-the-existing-form">Option one: working with the data in the existing form </a></li>
+<li class="toc-entry toc-h3"><a href="#Option-two:-reshaping-the-data">Option two: reshaping the data </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#Comparing-the-two-solutions">Comparing the two solutions </a></li>
+<li class="toc-entry toc-h2"><a href="#Summary">Summary </a></li>
+</ul>
+</li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/Making a difficult data analysis problem trivial.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Introduction">
+<a class="anchor" href="#Introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction<a class="anchor-link" href="#Introduction"> </a>
+</h1>
+<p>One of the things that makes data exploration such a powerful skill to have is the ease with which we can find interesting datasets online. We can search for data that will help us to answer real world questions, or just browse for interesting collections of data (that's how I picked all the example datasets for the videos that accompany the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>).</p>
+<p>One downside, however, of finding existing datasets to work with is that we have no control over the format of the data. When we hit the download button on a new dataset we might find all sorts of things that will make our analysis difficult. Some of these I've already written about - invalid data, missing data, data spread over multiple files or with obvious errors.</p>
+<p>A more subtle problem is when the data are not in the structure that we would like. This issue is bit more complex than the others. If a dataset has annotation errors then we could all agree that that is bad. But the specific way that a data file is structured isn't good or bad in itself - it's just that a given structure makes some problems easy and some problems hard.</p>
+<p>Thankfully, pandas has very powerful tools for reshaping and restructuring data. In this article we'll try to answer a problem that is difficult given the structure of our data file, but becomes very easy when we reshape the data.</p>
+<p>As always, to keep this article to a reasonable size we won't be going in to too much detail on the methods involved. All of the methods we'll use here are covered in detail in the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>. In particular, check out chapter 3 for a discussion of calculations on series and chapter 14 for the reshaping tools.</p>
+<p>If you're interested in more articles and tips on data exploration with Python, you should subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a> or <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>.</p>
+<h1 id="Taking-a-look-at-the-dataset">
+<a class="anchor" href="#Taking-a-look-at-the-dataset" aria-hidden="true"><span class="octicon octicon-link"></span></a>Taking a look at the dataset<a class="anchor-link" href="#Taking-a-look-at-the-dataset"> </a>
+</h1>
+<p>Our starting point for this analysis is a data file giving the highest and lowest mean daily temperature in Farenheit for each year for a bunch of different cities. Let's take a look at it:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_columns</span><span class="o">=</span><span class="mi">6</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_rows</span><span class="o">=</span><span class="mi">10</span>
+
+
+<span class="n">cities</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'city_min_max.csv'</span><span class="p">)</span>
+<span class="n">cities</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Year</th>
+      <th>Abidjan_max</th>
+      <th>Abidjan_min</th>
+      <th>...</th>
+      <th>Youngstown_min</th>
+      <th>Zurich_max</th>
+      <th>Zurich_min</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>86.7</td>
+      <td>73.0</td>
+      <td>...</td>
+      <td>4.8</td>
+      <td>77.6</td>
+      <td>17.1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1996</td>
+      <td>86.1</td>
+      <td>72.2</td>
+      <td>...</td>
+      <td>-2.1</td>
+      <td>74.0</td>
+      <td>10.7</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1997</td>
+      <td>85.1</td>
+      <td>73.0</td>
+      <td>...</td>
+      <td>2.5</td>
+      <td>73.4</td>
+      <td>14.2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1998</td>
+      <td>87.2</td>
+      <td>73.4</td>
+      <td>...</td>
+      <td>13.2</td>
+      <td>78.6</td>
+      <td>19.7</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1999</td>
+      <td>87.2</td>
+      <td>73.4</td>
+      <td>...</td>
+      <td>3.3</td>
+      <td>75.8</td>
+      <td>16.3</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>2016</td>
+      <td>86.9</td>
+      <td>74.9</td>
+      <td>...</td>
+      <td>7.0</td>
+      <td>76.4</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>2017</td>
+      <td>86.4</td>
+      <td>74.6</td>
+      <td>...</td>
+      <td>7.9</td>
+      <td>80.3</td>
+      <td>17.4</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>2018</td>
+      <td>85.8</td>
+      <td>74.6</td>
+      <td>...</td>
+      <td>2.0</td>
+      <td>80.5</td>
+      <td>14.5</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>2019</td>
+      <td>87.0</td>
+      <td>74.5</td>
+      <td>...</td>
+      <td>-4.0</td>
+      <td>81.7</td>
+      <td>26.1</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>2020</td>
+      <td>86.4</td>
+      <td>77.4</td>
+      <td>...</td>
+      <td>15.4</td>
+      <td>67.1</td>
+      <td>27.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>26 rows × 547 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Hopefully it's not too hard to see the structure. We have a <strong>year</strong> column, then a bunch of paired minimum and maximum columns for each city. Notice that this is a very wide dataframe, with many more columns than rows. We might call it a summary table.</p>
+<p>This format makes it very easy to answer some types of question. For example, in which years was the coldest day in Singapore warmer than the warmest day in Stockholm? To find out, we just have to filter on these two columns then take the year column:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cities</span><span class="p">[</span><span class="n">cities</span><span class="p">[</span><span class="s1">'Stockholm_max'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">cities</span><span class="p">[</span><span class="s1">'Singapore_min'</span><span class="p">]][</span><span class="s1">'Year'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>1     1996
+2     1997
+3     1998
+5     2000
+7     2002
+      ... 
+18    2013
+20    2015
+21    2016
+22    2017
+25    2020
+Name: Year, Length: 16, dtype: int64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="The-challenge">
+<a class="anchor" href="#The-challenge" aria-hidden="true"><span class="octicon octicon-link"></span></a>The challenge<a class="anchor-link" href="#The-challenge"> </a>
+</h2>
+<p>Our goal for this analysis is simply to calculate the different between the minimum and maximum for each city in each year. Let's call this the <strong>temperature range</strong>. We would like to end up with a very simple table that has three columns: <strong>city</strong>, <strong>year</strong> and <strong>temperature range</strong>.</p>
+<p>Now, in many ways the above dataframe looks like it will be very nice to work with. We have no missing data, no invalid values, all the columns are floating point with the exception of year. So this should be an easy calculation to carry out.</p>
+<h3 id="Option-one:-working-with-the-data-in-the-existing-form">
+<a class="anchor" href="#Option-one:-working-with-the-data-in-the-existing-form" aria-hidden="true"><span class="octicon octicon-link"></span></a>Option one: working with the data in the existing form<a class="anchor-link" href="#Option-one:-working-with-the-data-in-the-existing-form"> </a>
+</h3>
+<p>Let's start with something simple - can we calculate the temperature range for a single city? Given the column names, that's easy - we just subtract the two series:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cities</span><span class="p">[</span><span class="s1">'London_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="p">[</span><span class="s1">'London_min'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0     52.0
+1     50.4
+2     49.9
+3     42.7
+4     46.8
+      ... 
+21    45.5
+22    47.3
+23    55.3
+24    52.0
+25    28.0
+Length: 26, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>These numbers aren't much use without the <strong>year</strong> column, so let's add that. The easiest way is to set year as the index, so that it gets propagated to the resulting series:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="s1">'London_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="s1">'London_min'</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Year
+1995    52.0
+1996    50.4
+1997    49.9
+1998    42.7
+1999    46.8
+        ... 
+2016    45.5
+2017    47.3
+2018    55.3
+2019    52.0
+2020    28.0
+Length: 26, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>OK, now let's try multiple cities. If we just manually pick a few cities and put the calculation in a loop, it's fairly straightforward to create the series. For each city name we can figure out the column names by appending <code>_min</code> and <code>_max</code>, then calculate the temperature range by subtracting them like before:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Birmingham'</span><span class="p">,</span> <span class="s1">'Delhi'</span><span class="p">,</span> <span class="s1">'Osaka'</span><span class="p">]:</span>
+    <span class="n">temp_range</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_min'</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">city</span><span class="p">,</span> <span class="n">temp_range</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Birmingham Year
+1995    65.8
+1996    74.1
+1997    64.8
+1998    57.4
+1999    69.0
+        ... 
+2016    61.1
+2017    62.8
+2018    65.1
+2019    58.2
+2020    46.3
+Length: 26, dtype: float64
+Delhi Year
+1995    52.2
+1996    47.5
+1997    51.9
+1998    54.6
+1999    50.7
+        ... 
+2016    48.8
+2017    52.1
+2018    48.5
+2019    58.1
+2020    41.5
+Length: 26, dtype: float64
+Osaka Year
+1995    55.1
+1996    56.1
+1997    52.3
+1998    56.5
+1999    57.0
+        ... 
+2016    61.0
+2017    55.5
+2018    61.2
+2019    54.2
+2020    38.8
+Length: 26, dtype: float64
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Although the calculation is not too hard, in the above code we're just printing the series. Life gets a lot more complicated when we want to turn those numbers into a new dataframe. Now we have to turn each city series into a dataframe, add the city name as a column, store all the individual city dataframes in a list, and concatenate them at the end:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Birmingham'</span><span class="p">,</span> <span class="s1">'Delhi'</span><span class="p">,</span> <span class="s1">'Osaka'</span><span class="p">]:</span>
+    
+    <span class="c1"># calculate the series as before</span>
+    <span class="n">city_series</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_min'</span><span class="p">]</span>
+    
+    <span class="c1"># turn it into a dataframe and move the year into a column</span>
+    <span class="n">city_df</span> <span class="o">=</span> <span class="n">city_series</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="s1">'temp range'</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    
+    <span class="c1"># add the city name column</span>
+    <span class="n">city_df</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span> <span class="o">=</span> <span class="n">city</span>
+      
+    <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">city_df</span><span class="p">)</span>
+    
+<span class="c1"># after the loop, concatenate all of the individual city dataframes</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Year</th>
+      <th>temp range</th>
+      <th>city</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>65.8</td>
+      <td>Birmingham</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1996</td>
+      <td>74.1</td>
+      <td>Birmingham</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1997</td>
+      <td>64.8</td>
+      <td>Birmingham</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1998</td>
+      <td>57.4</td>
+      <td>Birmingham</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1999</td>
+      <td>69.0</td>
+      <td>Birmingham</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>2016</td>
+      <td>61.0</td>
+      <td>Osaka</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>2017</td>
+      <td>55.5</td>
+      <td>Osaka</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>2018</td>
+      <td>61.2</td>
+      <td>Osaka</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>2019</td>
+      <td>54.2</td>
+      <td>Osaka</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>2020</td>
+      <td>38.8</td>
+      <td>Osaka</td>
+    </tr>
+  </tbody>
+</table>
+<p>78 rows × 3 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is starting to look pretty complicated, but at least now most of the work is done. Now we just have to replace our manual list of city names with a list of all the city names. Unfortunately, that will involve quite a bit of processing as well. We need to take all the column names, get the part before the underscore, discard any duplicates (otherwise we will get each city name twice) and remember to exclude the year column. To keep it brief let's just see the final expression (for an explanation of the string processing methods we are using, take a look at chapter 3 in the Drawing from Data book):</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">cities</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>Index(['Abidjan', 'Abilene', 'Abu Dhabi', 'Addis Ababa', 'Akron Canton',
+       'Albany', 'Albuquerque', 'Algiers', 'Allentown', 'Almaty',
+       ...
+       'Washington DC', 'Washington', 'West Palm Beach', 'Wichita Falls',
+       'Wichita', 'Wilkes Barre', 'Windhoek', 'Yakima', 'Youngstown',
+       'Zurich'],
+      dtype='object', length=273)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Technically the result of the above expression is an <code>Index</code> object, not a list, but it will behave like a list when we iterate over it in a loop.</p>
+<p>Plugging this expression into our calculation loop gives us the following code:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="n">cities</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">city_series</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_min'</span><span class="p">]</span>
+    <span class="n">city_df</span> <span class="o">=</span> <span class="n">city_series</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="s1">'temp range'</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">city_df</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span> <span class="o">=</span> <span class="n">city</span>
+    <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">city_df</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Year</th>
+      <th>temp range</th>
+      <th>city</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>13.7</td>
+      <td>Abidjan</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1996</td>
+      <td>13.9</td>
+      <td>Abidjan</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1997</td>
+      <td>12.1</td>
+      <td>Abidjan</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1998</td>
+      <td>13.8</td>
+      <td>Abidjan</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1999</td>
+      <td>13.8</td>
+      <td>Abidjan</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>2016</td>
+      <td>56.4</td>
+      <td>Zurich</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>2017</td>
+      <td>62.9</td>
+      <td>Zurich</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>2018</td>
+      <td>66.0</td>
+      <td>Zurich</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>2019</td>
+      <td>55.6</td>
+      <td>Zurich</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>2020</td>
+      <td>40.1</td>
+      <td>Zurich</td>
+    </tr>
+  </tbody>
+</table>
+<p>7098 rows × 3 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Even for experienced pandas users, this would take quite a bit of effort to understand! But notice that the actual calculation is very simple - we're just subtracting one column from another. All of the complexity is to deal with getting the information we want into the right format. The most important bit of the code - the subtraction - is hard to spot, as it's somewhat hidden inside our complicated <code>for</code> loop.</p>
+<h3 id="Option-two:-reshaping-the-data">
+<a class="anchor" href="#Option-two:-reshaping-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Option two: reshaping the data<a class="anchor-link" href="#Option-two:-reshaping-the-data"> </a>
+</h3>
+<p>Since all of the complexity in our above code is due to dealing with the format of the data, it's possible to imagine a different format that would make life much easier. Imagine that we had a dataframe with four columns - <strong>city</strong>, <strong>year</strong>, <strong>min</strong> and <strong>max</strong>. In that case, we would just subtract the <strong>min</strong> column from the <strong>max</strong> column and our work would be done.</p>
+<p>We don't have a dataframe in that format, but let's see if it's possible to make one. The first step is to convert our existing datframe into long format using <code>melt</code>:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tidy_cities</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">'Year'</span><span class="p">])</span>
+<span class="n">tidy_cities</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Year</th>
+      <th>variable</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>Abidjan_max</td>
+      <td>86.7</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1996</td>
+      <td>Abidjan_max</td>
+      <td>86.1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1997</td>
+      <td>Abidjan_max</td>
+      <td>85.1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1998</td>
+      <td>Abidjan_max</td>
+      <td>87.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1999</td>
+      <td>Abidjan_max</td>
+      <td>87.2</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>14191</th>
+      <td>2016</td>
+      <td>Zurich_min</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>14192</th>
+      <td>2017</td>
+      <td>Zurich_min</td>
+      <td>17.4</td>
+    </tr>
+    <tr>
+      <th>14193</th>
+      <td>2018</td>
+      <td>Zurich_min</td>
+      <td>14.5</td>
+    </tr>
+    <tr>
+      <th>14194</th>
+      <td>2019</td>
+      <td>Zurich_min</td>
+      <td>26.1</td>
+    </tr>
+    <tr>
+      <th>14195</th>
+      <td>2020</td>
+      <td>Zurich_min</td>
+      <td>27.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>14196 rows × 3 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Since this is only a temporary dataframe, we will just allow <code>melt</code> to use the defaul varable and value names.</p>
+<p>Next we can take the <strong>variable</strong> column and, using the same string processing tools as before, turn it into two columns based on the underscore:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tidy_cities</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>14191</th>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14192</th>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14193</th>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14194</th>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14195</th>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+  </tbody>
+</table>
+<p>14196 rows × 2 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can add these two new columns by just setting new columns on the existing dataframe. We'll also drop the old <strong>variable</strong> column as we don't need it anymore:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tidy_cities</span><span class="p">[[</span><span class="s1">'city'</span><span class="p">,</span> <span class="s1">'measurement'</span><span class="p">]]</span> <span class="o">=</span> <span class="n">tidy_cities</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">tidy_cities</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">tidy_cities</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Year</th>
+      <th>value</th>
+      <th>city</th>
+      <th>measurement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>86.7</td>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1996</td>
+      <td>86.1</td>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1997</td>
+      <td>85.1</td>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1998</td>
+      <td>87.2</td>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1999</td>
+      <td>87.2</td>
+      <td>Abidjan</td>
+      <td>max</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>14191</th>
+      <td>2016</td>
+      <td>20.0</td>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14192</th>
+      <td>2017</td>
+      <td>17.4</td>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14193</th>
+      <td>2018</td>
+      <td>14.5</td>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14194</th>
+      <td>2019</td>
+      <td>26.1</td>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>14195</th>
+      <td>2020</td>
+      <td>27.0</td>
+      <td>Zurich</td>
+      <td>min</td>
+    </tr>
+  </tbody>
+</table>
+<p>14196 rows × 4 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we just have to get the min and max as separate columns. The easiest way to do this is to set a multilevel index, use <code>unstack</code> to turn the measurement values as columns, then reset the index. In this step we'll also rename the columns:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">city_summary</span> <span class="o">=</span> <span class="n">tidy_cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">'Year'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">,</span> <span class="s1">'measurement'</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">city_summary</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'year'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">,</span> <span class="s1">'max temp'</span><span class="p">,</span> <span class="s1">'min temp'</span><span class="p">]</span>
+<span class="n">city_summary</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>year</th>
+      <th>city</th>
+      <th>max temp</th>
+      <th>min temp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>Abidjan</td>
+      <td>86.7</td>
+      <td>73.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1995</td>
+      <td>Abilene</td>
+      <td>89.9</td>
+      <td>24.6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1995</td>
+      <td>Abu Dhabi</td>
+      <td>104.4</td>
+      <td>62.4</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1995</td>
+      <td>Addis Ababa</td>
+      <td>71.8</td>
+      <td>55.4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1995</td>
+      <td>Akron Canton</td>
+      <td>84.4</td>
+      <td>2.9</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7093</th>
+      <td>2020</td>
+      <td>Wilkes Barre</td>
+      <td>67.2</td>
+      <td>15.6</td>
+    </tr>
+    <tr>
+      <th>7094</th>
+      <td>2020</td>
+      <td>Windhoek</td>
+      <td>86.3</td>
+      <td>58.0</td>
+    </tr>
+    <tr>
+      <th>7095</th>
+      <td>2020</td>
+      <td>Yakima</td>
+      <td>70.0</td>
+      <td>16.1</td>
+    </tr>
+    <tr>
+      <th>7096</th>
+      <td>2020</td>
+      <td>Youngstown</td>
+      <td>67.3</td>
+      <td>15.4</td>
+    </tr>
+    <tr>
+      <th>7097</th>
+      <td>2020</td>
+      <td>Zurich</td>
+      <td>67.1</td>
+      <td>27.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>7098 rows × 4 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we have our data in the exact same format that we imagined. And, as promised, the calculation we need to do becomes very easy:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">city_summary</span><span class="p">[</span><span class="s1">'max temp'</span><span class="p">]</span> <span class="o">-</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'min temp'</span><span class="p">]</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>0       13.7
+1       65.3
+2       42.0
+3       16.4
+4       81.5
+        ... 
+7093    51.6
+7094    28.3
+7095    53.9
+7096    51.9
+7097    40.1
+Length: 7098, dtype: float64</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Adding this series as a new column gives us our final dataframe:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">city_summary</span><span class="p">[</span><span class="s1">'temp range'</span><span class="p">]</span> <span class="o">=</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'max temp'</span><span class="p">]</span> <span class="o">-</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'min temp'</span><span class="p">]</span> 
+<span class="n">city_summary</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>year</th>
+      <th>city</th>
+      <th>max temp</th>
+      <th>min temp</th>
+      <th>temp range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>Abidjan</td>
+      <td>86.7</td>
+      <td>73.0</td>
+      <td>13.7</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1995</td>
+      <td>Abilene</td>
+      <td>89.9</td>
+      <td>24.6</td>
+      <td>65.3</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1995</td>
+      <td>Abu Dhabi</td>
+      <td>104.4</td>
+      <td>62.4</td>
+      <td>42.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1995</td>
+      <td>Addis Ababa</td>
+      <td>71.8</td>
+      <td>55.4</td>
+      <td>16.4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1995</td>
+      <td>Akron Canton</td>
+      <td>84.4</td>
+      <td>2.9</td>
+      <td>81.5</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7093</th>
+      <td>2020</td>
+      <td>Wilkes Barre</td>
+      <td>67.2</td>
+      <td>15.6</td>
+      <td>51.6</td>
+    </tr>
+    <tr>
+      <th>7094</th>
+      <td>2020</td>
+      <td>Windhoek</td>
+      <td>86.3</td>
+      <td>58.0</td>
+      <td>28.3</td>
+    </tr>
+    <tr>
+      <th>7095</th>
+      <td>2020</td>
+      <td>Yakima</td>
+      <td>70.0</td>
+      <td>16.1</td>
+      <td>53.9</td>
+    </tr>
+    <tr>
+      <th>7096</th>
+      <td>2020</td>
+      <td>Youngstown</td>
+      <td>67.3</td>
+      <td>15.4</td>
+      <td>51.9</td>
+    </tr>
+    <tr>
+      <th>7097</th>
+      <td>2020</td>
+      <td>Zurich</td>
+      <td>67.1</td>
+      <td>27.0</td>
+      <td>40.1</td>
+    </tr>
+  </tbody>
+</table>
+<p>7098 rows × 5 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Comparing-the-two-solutions">
+<a class="anchor" href="#Comparing-the-two-solutions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Comparing the two solutions<a class="anchor-link" href="#Comparing-the-two-solutions"> </a>
+</h2>
+<p>For the sake of comparison, let's see the two sets of code together, without comments:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="n">cities</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">city_series</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_min'</span><span class="p">]</span>
+    <span class="n">city_df</span> <span class="o">=</span> <span class="n">city_series</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="s1">'temp range'</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">city_df</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span> <span class="o">=</span> <span class="n">city</span>
+    <span class="n">dfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">city_df</span><span class="p">)</span>
+<span class="n">city_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+
+<span class="c1"># reshaping</span>
+<span class="n">tidy_cities</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">'Year'</span><span class="p">])</span>
+<span class="n">tidy_cities</span><span class="p">[[</span><span class="s1">'city'</span><span class="p">,</span> <span class="s1">'measurement'</span><span class="p">]]</span> <span class="o">=</span> <span class="n">tidy_cities</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">tidy_cities</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">city_summary</span> <span class="o">=</span> <span class="n">tidy_cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">'Year'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">,</span> <span class="s1">'measurement'</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">city_summary</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'year'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">,</span> <span class="s1">'max temp'</span><span class="p">,</span> <span class="s1">'min temp'</span><span class="p">]</span>
+<span class="n">city_summary</span><span class="p">[</span><span class="s1">'temp range'</span><span class="p">]</span> <span class="o">=</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'max temp'</span><span class="p">]</span> <span class="o">-</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'min temp'</span><span class="p">]</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>246 ms ± 2.87 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As an aside, the solution involving reshaping is about 10x faster on my machine, but let's ignore that for now - this article isn't about performance, and we haven't made any attempt to optimize either piece of code.</p>
+<p>Comparing the two solutions, we might note that they are about equal in complexity. If anything, the reshaping solution looks like more typing - though that's partly because if involves more column names. So why do I strongly prefer the second solution?</p>
+<p>Think about it from the perspective of someone reading the code for the first time and trying to understand what the code is doing. In the first solution, you have to comprehend the whole <code>for</code> loop in one go. One can imagine adding some <code>print</code> statements to look at the intermediate variables in order to understand the whole thing.</p>
+<p>The second solution has an interesting property, however - you can still understand the essential calculation <strong>even if you have no idea how the reshaping works</strong>. All the code involved in reshaping - everything up to this point:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tidy_cities</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="p">[</span><span class="s1">'Year'</span><span class="p">])</span>
+<span class="n">tidy_cities</span><span class="p">[[</span><span class="s1">'city'</span><span class="p">,</span> <span class="s1">'measurement'</span><span class="p">]]</span> <span class="o">=</span> <span class="n">tidy_cities</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">tidy_cities</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'variable'</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">city_summary</span> <span class="o">=</span> <span class="n">tidy_cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="s1">'Year'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">,</span> <span class="s1">'measurement'</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">city_summary</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'year'</span><span class="p">,</span> <span class="s1">'city'</span><span class="p">,</span> <span class="s1">'max temp'</span><span class="p">,</span> <span class="s1">'min temp'</span><span class="p">]</span>
+<span class="n">city_summary</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>year</th>
+      <th>city</th>
+      <th>max temp</th>
+      <th>min temp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>Abidjan</td>
+      <td>86.7</td>
+      <td>73.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1995</td>
+      <td>Abilene</td>
+      <td>89.9</td>
+      <td>24.6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1995</td>
+      <td>Abu Dhabi</td>
+      <td>104.4</td>
+      <td>62.4</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1995</td>
+      <td>Addis Ababa</td>
+      <td>71.8</td>
+      <td>55.4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1995</td>
+      <td>Akron Canton</td>
+      <td>84.4</td>
+      <td>2.9</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7093</th>
+      <td>2020</td>
+      <td>Wilkes Barre</td>
+      <td>67.2</td>
+      <td>15.6</td>
+    </tr>
+    <tr>
+      <th>7094</th>
+      <td>2020</td>
+      <td>Windhoek</td>
+      <td>86.3</td>
+      <td>58.0</td>
+    </tr>
+    <tr>
+      <th>7095</th>
+      <td>2020</td>
+      <td>Yakima</td>
+      <td>70.0</td>
+      <td>16.1</td>
+    </tr>
+    <tr>
+      <th>7096</th>
+      <td>2020</td>
+      <td>Youngstown</td>
+      <td>67.3</td>
+      <td>15.4</td>
+    </tr>
+    <tr>
+      <th>7097</th>
+      <td>2020</td>
+      <td>Zurich</td>
+      <td>67.1</td>
+      <td>27.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>7098 rows × 4 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>can be pretty much ignored as long as you understand the structure of the <code>city_summary</code> dataframe. And as we already mentioned, once the reshaping is done, the actual calculation is very straightforward:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">city_summary</span><span class="p">[</span><span class="s1">'temp range'</span><span class="p">]</span> <span class="o">=</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'max temp'</span><span class="p">]</span> <span class="o">-</span> <span class="n">city_summary</span><span class="p">[</span><span class="s1">'min temp'</span><span class="p">]</span> 
+<span class="n">city_summary</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>year</th>
+      <th>city</th>
+      <th>max temp</th>
+      <th>min temp</th>
+      <th>temp range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1995</td>
+      <td>Abidjan</td>
+      <td>86.7</td>
+      <td>73.0</td>
+      <td>13.7</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1995</td>
+      <td>Abilene</td>
+      <td>89.9</td>
+      <td>24.6</td>
+      <td>65.3</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1995</td>
+      <td>Abu Dhabi</td>
+      <td>104.4</td>
+      <td>62.4</td>
+      <td>42.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1995</td>
+      <td>Addis Ababa</td>
+      <td>71.8</td>
+      <td>55.4</td>
+      <td>16.4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1995</td>
+      <td>Akron Canton</td>
+      <td>84.4</td>
+      <td>2.9</td>
+      <td>81.5</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>7093</th>
+      <td>2020</td>
+      <td>Wilkes Barre</td>
+      <td>67.2</td>
+      <td>15.6</td>
+      <td>51.6</td>
+    </tr>
+    <tr>
+      <th>7094</th>
+      <td>2020</td>
+      <td>Windhoek</td>
+      <td>86.3</td>
+      <td>58.0</td>
+      <td>28.3</td>
+    </tr>
+    <tr>
+      <th>7095</th>
+      <td>2020</td>
+      <td>Yakima</td>
+      <td>70.0</td>
+      <td>16.1</td>
+      <td>53.9</td>
+    </tr>
+    <tr>
+      <th>7096</th>
+      <td>2020</td>
+      <td>Youngstown</td>
+      <td>67.3</td>
+      <td>15.4</td>
+      <td>51.9</td>
+    </tr>
+    <tr>
+      <th>7097</th>
+      <td>2020</td>
+      <td>Zurich</td>
+      <td>67.1</td>
+      <td>27.0</td>
+      <td>40.1</td>
+    </tr>
+  </tbody>
+</table>
+<p>7098 rows × 5 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>As a side benefit, the complete reshaped dataframe is likely to be useful in answering other weather-related questions. Remember, though, that although the reshaped dataframe makes it easier to answer our particular question, it makes it much harder to answer different questions. Look how much more complicated the code is to find the years when the warmest day in Stockholm was colder than the coldest day in Singapore:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="p">(</span>
+    <span class="n">city_summary</span>
+    <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'year'</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> 
+        <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'Stockholm'</span><span class="p">][</span><span class="s1">'max temp'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> 
+        <span class="o">&lt;</span> <span class="n">x</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s1">'city'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'Singapore'</span><span class="p">][</span><span class="s1">'min temp'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="p">[</span><span class="s1">'year'</span><span class="p">]</span>
+    <span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([1996, 1997, 1998, 2000, 2002, 2004, 2007, 2008, 2009, 2011, 2012,
+       2013, 2015, 2016, 2017, 2020])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is so complicated it would make this article twice as long to explain it - recall that this was a single line for the data in the original format.</p>
+<h2 id="Summary">
+<a class="anchor" href="#Summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Summary<a class="anchor-link" href="#Summary"> </a>
+</h2>
+<p>In this article we have looked at two different approaches to solving a difficult data analysis problem in pandas. If we had to describe them at a high level, we might say that the first way is to write code to solve the difficult problem. The second is to write code to reshape the data so that the difficult problem becomes an easy problem, then solve the easy problem.</p>
+<p>In the real world, this can be a very powerful problem-solving technique when working with datasets. The key is the imagination step: given a data analysis question, imagine what data structure would make that question easy to answer. Like any aspect of programming, this becomes easier with practice.</p>
+<p>In my experience teaching data exploration with Python, the reshaping tools are the parts of pandas that are most under-used. Partly this is because they can be tricky to understand, but partly it's a matter of mindset. It can be difficult to remember that the format of a dataset when we recieve it is not set in stone; it's simply how it happens to be stored at that time. And one of the big differences I notice between novice and experienced programmers is a willingness to rearrange the data to suit the question at hand.</p>
+<p>So next time you are faced with a tricky data analysis problem, try this strategy. Before starting to write code, try to think of a structure for the data that would make the problem easier, and see if you can get your data into  that form.</p>
+<p>If you've made it this far, you should definitely subscribe to the <a href="https://drawingfromdata.com/newsletter/">Drawing from Data newsletter</a>, <a href="https://twitter.com/DataDrawing">follow me on Twitter</a>, or buy the <a href="https://drawingfromdata.com/book/">Drawing from Data book</a>!</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><a class="u-url" href="/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Data exploration and visualization with Python, pandas, seaborn and matplotlib</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/fastai" title="fastai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://twitter.com/fastdotai" title="fastdotai"><svg class="svg-icon grey"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
