@@ -15,9 +15,9 @@
 <meta property="og:url" content="https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html" />
 <meta property="og:site_name" content="Drawing from Data" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-02-10T00:00:00-06:00" />
+<meta property="article:published_time" content="2021-02-11T00:00:00-06:00" />
 <script type="application/ld+json">
-{"url":"https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html","@type":"BlogPosting","headline":"Making a difficult data analysis question easy","dateModified":"2021-02-10T00:00:00-06:00","datePublished":"2021-02-10T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html"},"author":{"@type":"Person","name":"Martin"},"description":"A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping.","@context":"https://schema.org"}</script>
+{"url":"https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html","@type":"BlogPosting","headline":"Making a difficult data analysis question easy","dateModified":"2021-02-11T00:00:00-06:00","datePublished":"2021-02-11T00:00:00-06:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://drawingfromdata.com/pandas/reshaping/Making-a-difficult-data-analysis-problem-trivial.html"},"author":{"@type":"Person","name":"Martin"},"description":"A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://drawingfromdata.com/feed.xml" title="Drawing from Data" /><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
@@ -75,8 +75,8 @@ window.onload = wrap_img;
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Making a difficult data analysis question easy</h1><p class="page-description">A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-02-10T00:00:00-06:00" itemprop="datePublished">
-        Feb 10, 2021
+    <h1 class="post-title p-name" itemprop="name headline">Making a difficult data analysis question easy</h1><p class="page-description">A great strategy to use when faced with a tricky data analysis problem is to reshape the dataset into a format that turns it into an easy problem. In this article we will look at an example involving a simple calculation and extensive reshaping.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-02-11T00:00:00-06:00" itemprop="datePublished">
+        Feb 11, 2021
       </time>• 
           <span itemprop="author" itemscope itemtype="http://schema.org/Person">
             <span class="p-author h-card" itemprop="name">Martin</span></span>
@@ -913,7 +913,7 @@ Length: 26, dtype: float64
 <a class="anchor" href="#Option-two:-reshaping-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Option two: reshaping the data<a class="anchor-link" href="#Option-two:-reshaping-the-data"> </a>
 </h3>
 <p>Since all of the complexity in our above code is due to dealing with the format of the data, it's possible to imagine a different format that would make life much easier. Imagine that we had a dataframe with four columns - <strong>city</strong>, <strong>year</strong>, <strong>min</strong> and <strong>max</strong>. In that case, we would just subtract the <strong>min</strong> column from the <strong>max</strong> column and our work would be done.</p>
-<p>We don't have a dataframe in that format, but let's see if it's possible to make one. The first step is to convert our existing datframe into long format using <code>melt</code>:</p>
+<p>We don't have a dataframe in that format, but let's see if it's possible to make one. The first step is to convert our existing dataframe into long format using <code>melt</code>:</p>
 
 </div>
 </div>
@@ -1047,7 +1047,7 @@ Length: 26, dtype: float64
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Since this is only a temporary dataframe, we will just allow <code>melt</code> to use the defaul varable and value names.</p>
+<p>Since this is only a temporary dataframe, we will just allow <code>melt</code> to use the default variable and value names.</p>
 <p>Next we can take the <strong>variable</strong> column and, using the same string processing tools as before, turn it into two columns based on the underscore:</p>
 
 </div>
@@ -1689,7 +1689,9 @@ Length: 7098, dtype: float64</pre>
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># looping</span>
+
+<span class="n">dfs</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="n">cities</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]:</span>
     <span class="n">city_series</span> <span class="o">=</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_max'</span><span class="p">]</span> <span class="o">-</span> <span class="n">cities</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Year'</span><span class="p">)[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s1">_min'</span><span class="p">]</span>
     <span class="n">city_df</span> <span class="o">=</span> <span class="n">city_series</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="s1">'temp range'</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
